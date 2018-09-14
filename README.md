@@ -3,6 +3,8 @@
 ddcputester is a micro-processor testing utility that can:
  - Measure user-code instruction throughput/latency.
 
+NOTICE: Fixes are being prepared for consistent results, and is not ready for use.
+
 ## OPERATING SYSTEM SUPPORT
 
 | Platform (ABI) / ISA | x86 | AMD64 |
@@ -49,8 +51,9 @@ However, if the instruction is encoded like so:
 ```
 
 The processor may attempt to move a WORD (2 bytes) and move the Instruction Pointer
-to 00 00h, which is encoded like `mov [eax], al`, and since EAX=0 in this case (from
-ModR/M byte), it will attempt to write at address 0h and effectively segfault (#UD).
+to the next two bytes: 00 00h, which is encoded like `mov [eax], al`, and since
+EAX=0 in this case (from ModR/M byte), it will attempt to write at address 0h and
+effectively segfault (#UD).
 
 # TODO
 
