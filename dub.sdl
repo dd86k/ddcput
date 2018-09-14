@@ -1,0 +1,43 @@
+name "ddcputester"
+description "Processor tester (latency, etc.)"
+authors "dd86k"
+copyright "Copyright © 2018, dd86k"
+license "MIT"
+
+###################
+# Debug builds
+###################
+
+buildType "debug-verbose" {
+  targetType "executable"
+  buildOptions "debugMode" "debugInfoC"
+  dflags "-betterC" "-transition=intpromote" "-vgc" "-vtls" "-v"
+}
+
+buildType "debug" {
+  targetType "executable"
+  buildOptions "debugMode" "debugInfoC"
+  dflags "-betterC" "-transition=intpromote" "-g"
+}
+
+###################
+# Release builds
+###################
+
+buildType "release" {
+  targetType "executable"
+  buildOptions "releaseMode" "optimize"
+  dflags "-betterC" "-transition=intpromote"
+}
+
+buildType "release-nobounds" {
+  targetType "executable"
+  buildOptions "releaseMode" "noBoundsCheck" "optimize"
+  dflags "-betterC" "-transition=intpromote"
+}
+
+buildType "release-inline" {
+  targetType "executable"
+  buildOptions "releaseMode" "noBoundsCheck" "optimize" "inline"
+  dflags "-betterC" "-transition=intpromote"
+}
