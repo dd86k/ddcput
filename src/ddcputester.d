@@ -63,37 +63,42 @@ version (X86) {
 	static assert(0, "amd64-* POST_TEST code needed");
 }
 
-debug {
-	pragma(msg, "sizeof(__TEST_SETTINGS): ", __TEST_SETTINGS.sizeof);
-}
 
-struct __TEST_SETTINGS { align(1):
-	union {
-		ulong t1;
-		struct {
-			uint t1_l;	// [0]
-			uint t1_h;	// [4]
+version (X86_ANY) {
+	debug pragma(msg, "sizeof(__TEST_SETTINGS): ", __TEST_SETTINGS.sizeof);
+
+	struct __TEST_SETTINGS { align(1):
+		union {
+			ulong t1;
+			struct {
+				uint t1_l;	// [0]
+				uint t1_h;	// [4]
+			}
+		}
+		union {
+			ulong t2;
+			struct {
+				uint t2_l;	// [8]
+				uint t2_h;	// [12]
+			}
+		}
+		uint runs;	// [16]
+		version (X86) {
+			uint EDI;	// [20]
+			uint ESI;	// [24]
+		}
+		version (X86_64) {
+			ulong RDI;	// [20]
+			ulong ESI;	// [28]
 		}
 	}
-	union {
-		ulong t2;
-		struct {
-			uint t2_l;	// [8]
-			uint t2_h;	// [12]
-		}
-	}
-	uint runs;	// [16]
-	version (X86_ANY) {
-		uint EDI;	// [20]
-		uint ESI;	// [24]
-	}
-}
 
-pragma(msg, "t1_l->", __TEST_SETTINGS.t1_l.offsetof);
-pragma(msg, "t1_h->", __TEST_SETTINGS.t1_h.offsetof);
-pragma(msg, "t2_l->", __TEST_SETTINGS.t2_l.offsetof);
-pragma(msg, "t2_h->", __TEST_SETTINGS.t2_h.offsetof);
-pragma(msg, "runs->", __TEST_SETTINGS.runs.offsetof);
+	pragma(msg, "t1_l->", __TEST_SETTINGS.t1_l.offsetof);
+	pragma(msg, "t1_h->", __TEST_SETTINGS.t1_h.offsetof);
+	pragma(msg, "t2_l->", __TEST_SETTINGS.t2_l.offsetof);
+	pragma(msg, "t2_h->", __TEST_SETTINGS.t2_h.offsetof);
+	pragma(msg, "runs->", __TEST_SETTINGS.runs.offsetof);
+}
 
 static assert(__ASMBUF.sizeof == PAGE_SIZE, "Buffer size is not equal to PAGE_SIZE");
 
@@ -196,9 +201,8 @@ _TEST:
  *   path = File path (binary data)
  * Returns:
  *   0 on success
- *   1 on file not found
- *   2 on file could not be read
- *   3 on file could not be loaded into memory
+ *   1 on file could not be open
+ *   2 on file could not be loaded into memory
  */
 extern (C)
 int core_load_file(char* path) {
@@ -214,9 +218,8 @@ int core_load_file(char* path) {
 
 	// user code
 	debug puts("[debug] open user code");
-	if (os_pexist(path) == 0) return 1;
 	FILE* f = fopen(path, "rb");
-	if (cast(uint)f == 0) return 2;
+	if (cast(uint)f == 0) return 1;
 
 	debug puts("[debug] fseek end");
 	fseek(f, 0, SEEK_END);
