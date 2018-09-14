@@ -35,19 +35,21 @@ uint _except_handler(_EXCEPTION_POINTERS* e) {
 	version (Win32) {
 		printf(
 			"\n***** EXCEPTION\n" ~
-			"Address: %Xh\n\n" ~
-			"EIP=%08X\n" ~
+			"Address: %X\n" ~
+			"Code: %X\n\n" ~
+			"EIP=%08X  EFLAG=%08X\n" ~
 			"EAX=%08X  EBX=%08X  ECX=%08X  EDX=%08X\n" ~
 			"EDI=%08X  ESI=%08X  EBP=%08X  ESP=%08X\n" ~
 			"CS=%04X  DS=%04X  ES=%04X  FS=%04X  GS=%04X  DS=%04X\n",
 			e.ExceptionRecord.ExceptionAddress,
-			e.ContextRecord.Eip,
+			e.ExceptionRecord.ExceptionCode,
+			e.ContextRecord.Eip, e.ContextRecord.EFlags,
 			e.ContextRecord.Eax, e.ContextRecord.Ebx,
 			e.ContextRecord.Ecx, e.ContextRecord.Edx,
 			e.ContextRecord.Edi, e.ContextRecord.Esi,
 			e.ContextRecord.Ebp, e.ContextRecord.Esp,
 			e.ContextRecord.SegCs, e.ContextRecord.SegDs, e.ContextRecord.SegEs,
-			e.ContextRecord.SegFs, e.ContextRecord.SegGs, e.ContextRecord.SegSs
+			e.ContextRecord.SegFs, e.ContextRecord.SegGs, e.ContextRecord.SegSs,
 		);
 	} else { // Win64
 		static assert(0, "Win64 UnhandledExceptionFilter");

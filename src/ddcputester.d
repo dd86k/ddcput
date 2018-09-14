@@ -84,12 +84,12 @@ version (X86_ANY) {
 		}
 		uint runs;	// [16]
 		version (X86) {
-			uint EDI;	// [20]
-			uint ESI;	// [24]
+			uint R0;	// [20]
+			uint R1;	// [24]
 		}
 		version (X86_64) {
-			ulong RDI;	// [20]
-			ulong ESI;	// [28]
+			ulong R0;	// [20]
+			ulong R1;	// [28]
 		}
 	}
 
@@ -130,11 +130,11 @@ void __asm_protect(__ASMBUF* s) {
 				VirtualProtect(s, __ASMBUF.sizeof, PAGE_EXECUTE_READ, &e) ?
 				"OK" : cast(char*)"FAIL");
 		}
-		debug {
+		/*debug {
 			printf("[debug] VirtualLock: ");
 			printf("%s\n",
 				VirtualLock(s, __ASMBUF.sizeof) ? "OK" : cast(char*)"FAIL");
-		}
+		}*/
 	} else
 	version (Posix) {
 		mprotect(s, __ASMBUF.sizeof, PROT_READ | PROT_EXEC);
@@ -172,20 +172,26 @@ version (X86_ANY) {
 version (X86_ANY) extern (C)
 void core_init() {
 	debug puts("[debug] rdtsc+mov penalty");
-	uint ts1_l = void, ts2_l = void;
+	__TEST_SETTINGS s;
+	s.runs = RUNS;
 	asm {
-		mov ECX, RUNS;
+		lea ESI, s;
+		mov EDI, [ESI + 16];
 		rdtsc;
-		//mov ts1_h, EDX;
-		mov ts1_l, EAX;
+		mov [ESI], EAX;
+		mov [ESI + 4], EDX;
 _TEST:
-		dec ECX;
+		dec EDI;
 		jnz _TEST;
 		rdtsc;
-		//mov ts2_h, EDX;
-		mov ts2_l, EAX;
+		mov [ESI + 8], EAX;
+		mov [ESI + 12], EDX;
 	}
-	delta = cast(uint)((ts2_l - ts1_l) / RUNS);
+	delta = cast(uint)((cast(float)s.t2_l - s.t1_l) / RUNS);
+	debug {
+		printf("[debug] %u %u\n", s.t1_h, s.t1_l);
+		printf("[debug] %u %u\n", s.t2_h, s.t2_l);
+	}
 
 	debug puts("[debug] __asm_create");
 	asmbuf = __asm_create;
@@ -238,7 +244,7 @@ int core_load_file(char* path) {
 	debug puts("[debug] post-test memmove");
 	memmove(buf, POST_TEST, POST_TEST_SIZE);
 
-	int jmp = -fl;
+	int jmp = -(fl + 3); // + DEC
 	debug printf("[debug] post-test jmp patch (jmp:");
 	*cast(int*)(buf + POST_TEST_JMP) = jmp;
 
@@ -246,18 +252,18 @@ int core_load_file(char* path) {
 		printf("%d -- %X)\n", jmp, jmp);
 		ubyte* p = cast(ubyte*)asmbuf;
 
-		printf("[debug] PRE  -- ");
 		uint m = PRE_TEST_SIZE;
+		printf("[debug] PRE [%3d] -- ", m);
 		do printf("%02X ", *p++); while (--m);
 		putchar('\n');
 
-		printf("[debug] TEST -- ");
 		m = fl;
+		printf("[debug] TEST[%3d] -- ", m);
 		do printf("%02X ", *p++); while (--m);
 		putchar('\n');
 
-		printf("[debug] POST -- ");
 		m = POST_TEST_SIZE;
+		printf("[debug] POST[%3d] -- ", m);
 		do printf("%02X ", *p++); while (--m);
 		putchar('\n');
 	}
