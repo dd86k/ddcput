@@ -3,8 +3,6 @@
 ddcputester is a micro-processor testing utility that can:
  - Measure user-code instruction throughput/latency.
 
-NOTICE: Fixes are being prepared for consistent results, and is not ready for use.
-
 ## OPERATING SYSTEM SUPPORT
 
 | Platform (ABI) / ISA | x86 | AMD64 |

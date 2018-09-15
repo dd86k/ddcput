@@ -244,7 +244,7 @@ int core_load_file(char* path) {
 	debug puts("[debug] post-test memmove");
 	memmove(buf, POST_TEST, POST_TEST_SIZE);
 
-	int jmp = -(fl + 3); // + DEC
+	int jmp = -(fl + 7); // + DEC + JNE + OP
 	debug printf("[debug] post-test jmp patch (jmp:");
 	*cast(int*)(buf + POST_TEST_JMP) = jmp;
 
