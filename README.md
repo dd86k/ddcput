@@ -3,15 +3,23 @@
 ddcputester is a micro-processor testing utility that can:
  - Measure user-code instruction throughput/latency.
 
+NOTICE: Currently checking why release builds are crashing right after calling
+the memory block (e.g. how is the ABI affected in optimizations). This affects
+Windows builds so far.
+
 ## OPERATING SYSTEM SUPPORT
 
 | Platform (ABI) / ISA | x86 | AMD64 |
 |---|---|---|
-| Windows | ✔️ (5.1+) | In progress |
-| macOS | | |
-| Linux (System V) | | Planned |
+| Windows | ✔️ (5.1+) | ✔️ (6.0+) |
+| macOS | On wait^1 | On wait^1 |
+| Linux (System V) | Planned | On wait^2 |
 
-(x86) This tool is NOT supported in REAL-MODE and vm8086.
+^1: Until I get a macOS VM or someone willing to implement the necessities
+
+^2: See NOTICE above
+
+(x86) This tool is NOT supported in REAL-MODE and vm8086 (any 16-bit modes).
 
 # USAGE
 

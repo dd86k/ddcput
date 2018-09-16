@@ -22,9 +22,14 @@ version (Windows) {
 }
 
 // Page sizes may vary between 4K, 2M, and 1G
-// Normally, you'd want to check that with 
+// (Posix) Normally check with sysconf(_POSIX_FOO) then
+// sysconf(_SC_PAGESIZE/PAGESIZE) to get pagesize in bytes
+// (Windows) Normally check with GetSystemInfo->_SYSTEM_INFO.dwPageSize.
+// 
+//TODO: Get page sizes
 enum PAGE_SIZE = 4096u;	/// Minimum page size
-enum RUNS = 50_000;	/// Number of times to run the test
+debug enum RUNS = 0xDDDD;
+else  enum RUNS = 50_000;	/// Number of times to run the test
 enum NULL = cast(void*)0;
 
 /// (x86) Moving results from RDTSC penalty
@@ -61,13 +66,11 @@ version (X86) {
 } else version (X86_64) {
 	version (Windows) {
 		immutable ubyte* PRE_TEST = [
-			// test -- Sets [rcx+4], 1234 and returns
-
 			// pre-amd64-windows.asm
 			0x48, 0x89, 0x79, 0x14, 0x48, 0x89, 0x71, 0x1C, 0x48, 0x89, 0xCE, 0x48,
-			0x8B, 0x7E, 0x10, 0x0F, 0x31, 0x89, 0x06, 0x89, 0x56, 0x04
+			0x31, 0xFF, 0x8B, 0x7E, 0x10, 0x0F, 0x31, 0x89, 0x06, 0x89, 0x56, 0x04
 		];
-		enum PRE_TEST_SIZE = 22;
+		enum PRE_TEST_SIZE = 24;
 
 		immutable ubyte* POST_TEST = [
 			// post-amd64-windows.asm
@@ -211,7 +214,8 @@ _TEST:
 	}
 	version (X86_64) asm {
 		lea RSI, s;
-		mov RDI, [RSI + 16];
+		xor RDI, RDI;
+		mov EDI, [RSI + 16];
 		rdtsc;
 		mov [RSI], EAX;
 		mov [RSI + 4], EDX;
