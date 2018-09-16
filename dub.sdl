@@ -1,5 +1,5 @@
 name "ddcputester"
-description "Processor tester (latency, etc.)"
+description "Processor tester"
 authors "dd86k"
 copyright "Copyright © 2018, dd86k"
 license "MIT"

@@ -7,7 +7,7 @@ ddcputester is a micro-processor testing utility that can:
 
 | Platform (ABI) / ISA | x86 | AMD64 |
 |---|---|---|
-| Windows | ✔️ (min: 5.1) | Planned |
+| Windows | ✔️ (5.1+) | In progress |
 | macOS | | |
 | Linux (System V) | | Planned |
 

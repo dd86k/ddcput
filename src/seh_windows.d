@@ -10,7 +10,7 @@ public void seh_init() {
 
 private:
 
-enum SIZE_OF_80387_REGISTERS = 80;
+enum WOW64_SIZE_OF_80387_REGISTERS = 80;
 enum EXCEPTION_CONTINUE_SEARCH = 0; // Shows dialog
 enum EXCEPTION_EXECUTE_HANDLER = 1; // does not
 enum WOW64_MAXIMUM_SUPPORTED_EXTENSION = 512;
@@ -49,10 +49,27 @@ uint _except_handler(_EXCEPTION_POINTERS* e) {
 			e.ContextRecord.Edi, e.ContextRecord.Esi,
 			e.ContextRecord.Ebp, e.ContextRecord.Esp,
 			e.ContextRecord.SegCs, e.ContextRecord.SegDs, e.ContextRecord.SegEs,
-			e.ContextRecord.SegFs, e.ContextRecord.SegGs, e.ContextRecord.SegSs,
+			e.ContextRecord.SegFs, e.ContextRecord.SegGs, e.ContextRecord.SegSs
 		);
 	} else { // Win64
-		static assert(0, "Win64 UnhandledExceptionFilter");
+		printf(
+			"\n***** EXCEPTION\n" ~
+			"Address: %llX\n" ~
+			"Code: %X\n\n" ~
+			"RIP=%016llX  EFLAG=%08X\n" ~
+			"RAX=%016llX  RBX=%016llX  RCX=%016llX  RDX=%016llX\n" ~
+			"RDI=%016llX  RSI=%016llX  RBP=%016llX  RSP=%016llX\n" ~
+			"CS=%04X  DS=%04X  ES=%04X  FS=%04X  GS=%04X  DS=%04X\n",
+			e.ExceptionRecord.ExceptionAddress,
+			e.ExceptionRecord.ExceptionCode,
+			e.ContextRecord.Rip, e.ContextRecord.EFlags,
+			e.ContextRecord.Rax, e.ContextRecord.Rbx,
+			e.ContextRecord.Rcx, e.ContextRecord.Rdx,
+			e.ContextRecord.Rdi, e.ContextRecord.Rsi,
+			e.ContextRecord.Rbp, e.ContextRecord.Rsp,
+			e.ContextRecord.SegCs, e.ContextRecord.SegDs, e.ContextRecord.SegEs,
+			e.ContextRecord.SegFs, e.ContextRecord.SegGs, e.ContextRecord.SegSs
+		);
 	}
 	return EXCEPTION_EXECUTE_HANDLER;
 }
@@ -62,7 +79,7 @@ struct _EXCEPTION_POINTERS {
 	PCONTEXT          ContextRecord;
 }
 
-struct _EXCEPTION_RECORD { align(1):
+struct _EXCEPTION_RECORD {
 	DWORD ExceptionCode;
 	DWORD ExceptionFlags;
 	_EXCEPTION_RECORD* ExceptionRecord;
@@ -71,21 +88,44 @@ struct _EXCEPTION_RECORD { align(1):
 	DWORD[EXCEPTION_MAXIMUM_PARAMETERS] ExceptionInformation;
 }
 
-version (Win32)
+version (Win32) {
+	struct _WOW64_FLOATING_SAVE_AREA {
+		DWORD ControlWord;
+		DWORD StatusWord;
+		DWORD TagWord;
+		DWORD ErrorOffset;
+		DWORD ErrorSelector;
+		DWORD DataOffset;
+		DWORD DataSelector;
+		BYTE[WOW64_SIZE_OF_80387_REGISTERS]  RegisterArea;
+		DWORD Cr0NpxState;
+	}
 	/// Win32 _CONTEXT
 	struct _CONTEXT {
 		DWORD ContextFlags;
+		//
+		// Debug registers
+		//
 		DWORD Dr0;
 		DWORD Dr1;
 		DWORD Dr2;
 		DWORD Dr3;
 		DWORD Dr6;
 		DWORD Dr7;
-		_FLOATING_SAVE_AREA FloatSave;
+		//
+		// Float
+		//
+		_WOW64_FLOATING_SAVE_AREA FloatSave;
+		//
+		// Segments
+		//
 		DWORD SegGs;
 		DWORD SegFs;
 		DWORD SegEs;
 		DWORD SegDs;
+		//
+		// General registers
+		//
 		DWORD Edi;
 		DWORD Esi;
 		DWORD Ebx;
@@ -94,15 +134,42 @@ version (Win32)
 		DWORD Eax;
 		DWORD Ebp;
 		DWORD Eip;
-		DWORD SegCs;
+		DWORD SegCs; // segment
+		//
+		// Flags
+		//
 		DWORD EFlags;
-		DWORD Esp;
-		DWORD SegSs;
+		DWORD Esp; // generic
+		DWORD SegSs; // segment
 		BYTE[WOW64_MAXIMUM_SUPPORTED_EXTENSION] ExtendedRegisters;
 	}
-else // Win64
+} else { // Win64
+	struct _XSAVE_FORMAT { align(16):
+		WORD   ControlWord;
+		WORD   StatusWord;
+		BYTE  TagWord;
+		BYTE  Reserved1;
+		WORD   ErrorOpcode;
+		DWORD ErrorOffset;
+		WORD   ErrorSelector;
+		WORD   Reserved2;
+		DWORD DataOffset;
+		WORD   DataSelector;
+		WORD   Reserved3;
+		DWORD MxCsr;
+		DWORD MxCsr_Mask;
+		M128A[8] FloatRegisters;
+
+		version (Win64) {
+			M128A[16] XmmRegisters;
+			BYTE[96]  Reserved4;
+		} else {
+			M128A[8]  XmmRegisters;
+			BYTE[224] Reserved4;
+		}
+	}
 	/// Win64 _CONTEXT
-	struct _CONTEXT { align(16): // DECLSPEC_ALIGN(16)
+	struct _CONTEXT { // DECLSPEC_ALIGN(16) is a lie
 		//
 		// Register parameter home addresses.
 		//
@@ -166,7 +233,7 @@ else // Win64
 		// Floating point state.
 		//
 		union {
-			XMM_SAVE_AREA32 FltSave;
+			_XSAVE_FORMAT FltSave;
 			struct {
 				M128A[2] Header;
 				M128A[8] Legacy;
@@ -202,20 +269,8 @@ else // Win64
 		DWORD64 LastExceptionToRip;
 		DWORD64 LastExceptionFromRip;
 	}
-
-struct M128A { align(1):
-	ulong low;
-	ulong high;
 }
 
-struct _FLOATING_SAVE_AREA {
-    DWORD   ControlWord;
-    DWORD   StatusWord;
-    DWORD   TagWord;
-    DWORD   ErrorOffset;
-    DWORD   ErrorSelector;
-    DWORD   DataOffset;
-    DWORD   DataSelector;
-    BYTE[SIZE_OF_80387_REGISTERS]    RegisterArea;
-    DWORD   Spare0;
+struct M128A { align(1):
+	ulong low; 	ulong high;
 }

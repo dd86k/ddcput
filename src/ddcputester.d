@@ -51,7 +51,7 @@ version (X86) {
 		];
 		enum POST_TEST_SIZE = 24;
 		enum POST_TEST_JMP = 3;	/// Jump patch offset, 0-based, aims at lowest byte
-		//enum POST_TEST_JMP_OP_SIZE = 4;	// JNE REL16
+		enum POST_TEST_OFFSET_JMP = 7;	// DEC+JMP+IMM32
 	} // version Windows
 
 	version (linux) {
@@ -59,8 +59,30 @@ version (X86) {
 		static assert(0, "x86-linux POST_TEST code needed");
 	} // version linux
 } else version (X86_64) {
-	static assert(0, "amd64-* PRE_TEST code needed");
-	static assert(0, "amd64-* POST_TEST code needed");
+	version (Windows) {
+		immutable ubyte* PRE_TEST = [
+			// test -- Sets [rcx+4], 1234 and returns
+
+			// pre-amd64-windows.asm
+			0x48, 0x89, 0x79, 0x14, 0x48, 0x89, 0x71, 0x1C, 0x48, 0x89, 0xCE, 0x48,
+			0x8B, 0x7E, 0x10, 0x0F, 0x31, 0x89, 0x06, 0x89, 0x56, 0x04
+		];
+		enum PRE_TEST_SIZE = 22;
+
+		immutable ubyte* POST_TEST = [
+			// post-amd64-windows.asm
+			0x48, 0xFF, 0xCF, 0x0F, 0x85, 0x00, 0x00, 0x00, 0x00, 0x0F, 0x31, 0x89,
+			0x46, 0x08, 0x89, 0x56, 0x0C, 0x48, 0x89, 0xF1, 0x48, 0x8B, 0x79, 0x14,
+			0x48, 0x8B, 0x71, 0x18, 0xC3
+		];
+		enum POST_TEST_SIZE = 29;
+		enum POST_TEST_JMP = 5;	/// Jump patch offset, 0-based, aims at lowest byte
+		enum POST_TEST_OFFSET_JMP = 9;	// DEC+JMP+IMM32
+	}
+
+	version (linux) {
+
+	}
 }
 
 
@@ -174,7 +196,7 @@ void core_init() {
 	debug puts("[debug] rdtsc+mov penalty");
 	__TEST_SETTINGS s;
 	s.runs = RUNS;
-	asm {
+	version (X86) asm {
 		lea ESI, s;
 		mov EDI, [ESI + 16];
 		rdtsc;
@@ -186,6 +208,19 @@ _TEST:
 		rdtsc;
 		mov [ESI + 8], EAX;
 		mov [ESI + 12], EDX;
+	}
+	version (X86_64) asm {
+		lea RSI, s;
+		mov RDI, [RSI + 16];
+		rdtsc;
+		mov [RSI], EAX;
+		mov [RSI + 4], EDX;
+_TEST:
+		dec RDI;
+		jnz _TEST;
+		rdtsc;
+		mov [RSI + 8], EAX;
+		mov [RSI + 12], EDX;
 	}
 	delta = cast(uint)((cast(float)s.t2_l - s.t1_l) / RUNS);
 	debug {
@@ -244,7 +279,7 @@ int core_load_file(char* path) {
 	debug puts("[debug] post-test memmove");
 	memmove(buf, POST_TEST, POST_TEST_SIZE);
 
-	int jmp = -(fl + 7); // + DEC + JNE + OP
+	int jmp = -(fl + POST_TEST_OFFSET_JMP); // + DEC + JNE + OP
 	debug printf("[debug] post-test jmp patch (jmp:");
 	*cast(int*)(buf + POST_TEST_JMP) = jmp;
 
@@ -310,7 +345,7 @@ float core_test(__TEST_SETTINGS* s) {
 	extern (C) void function(__TEST_SETTINGS*)
 		__test = cast(void function(__TEST_SETTINGS*))asmbuf;
 
-	debug printf("[debug] call __test@%Xh\n", cast(uint)__test);
+	debug puts("[debug] call __test");
 	__test(s);
 
 	debug {
