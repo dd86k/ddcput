@@ -2,113 +2,112 @@ import core.stdc.stdio;
 
 import ddcputester;
 import os_utils;
+import test_latency;
 
-version (Windows) {
-	import seh_windows : seh_init;
-}
-version (Posix) {
-	//import seh_posix : seh_init;
-}
+enum APP_VERSION = "0.0.0"; /// Application version
 
-enum APP_VERSION = "0.0.0";
-
-version (X86_64) {
-	enum PLATFORM = "AMD64";
-} else version (X86) {
-	enum PLATFORM = "X86";
+version (X86) {
+	enum PLATFORM = "x86";	/// Compiled platform
+} else version (X86_64) {
+	enum PLATFORM = "amd64";	/// Compiled platform
 } else version (ARM) {
-	enum PLATFORM = "ARM";
+	enum PLATFORM = "ARM";	/// Compiled platform
+	static assert(0,
+		"ddcputester is currently only supported on x86");
 }
 
-extern (C)
-void p_help() {
+enum : ubyte {
+	MODE_NONE,	/// other
+	MODE_LATENCY,	/// Latency tester, -L
+	MODE_FUZZER,	/// Fuzzer feature, -F
+}
+
+__gshared ubyte opt_currentmode; /// Current operation mode, defaults to MODE_NONE
+
+/// Print help
+extern (C) void phelp() {
 	puts(
-		"DDCPUTESTER, processor testing tool\n"~
-		"  ddcputester [FILE]\n\n"~
-		"  FILE        File containing instructions to measure latency"
+		"ddcputester, processor testing tool\n"~
+		"  ddcputester -SL [FILE]\n\n"~
+		"  FILE        (-L) File containing instructions to measure latency"
 	);
 }
 
-extern (C)
-void p_version() {
+/// Print version
+extern (C) void pversion() {
 	printf(
-		"\nDDCPUTESTER-"~PLATFORM~" v"~APP_VERSION~"  ("~__TIMESTAMP__~")\n"~
-		"Built with the "~__VENDOR__~" compiler (D v%u standard)\n\n"
-		, __VERSION__
+		"ddcputester-"~PLATFORM~" v"~APP_VERSION~"  ("~__TIMESTAMP__~")\n"~
+		"License: MIT <https://opensource.org/licenses/MIT>\n"~
+		"Compiler: "~__VENDOR__~" v%u\n",
+		__VERSION__
 	);
 }
 
 extern (C)
-int main(int argc, char** argv) {
+int main(const int argc, immutable(char)** argv) {
 	import core.stdc.string : strcmp;
 
 	if (argc <= 1) {
-		p_help; return 0;
+		phelp; return 0;
 	}
 
-	while (--argc >= 1) {
-		if (argv[argc][1] == '-') { // Long arguments
-			char* a = argv[argc] + 2;
+	uint ai = argc; /// argument index
+	immutable(char)* a = void; /// temporary arg pointer
+	while (--ai >= 1) {
+		if (argv[ai][1] == '-') { // Long arguments
+			a = argv[ai] + 2;
 			if (strcmp(a, "help") == 0) {
-				p_help; return 0;
+				phelp; return 0;
 			}
 			if (strcmp(a, "version") == 0) {
-				p_version; return 0;
+				pversion; return 0;
 			}
 			printf("Unknown parameter: %s\n", a);
 			return 1;
-		} else if (argv[argc][0] == '-') { // Short arguments
-			char* a = argv[argc];
-			while (*++a != 0) {
-				switch (*a) {
-				case 'h', '?': p_help; return 0;
-				case 'v': p_version; return 0;
-				default:
-					printf("Unknown parameter: %c\n", *a);
-					return 1;
-				} // switch
-			} // while
+		} else if (argv[ai][0] == '-') { // Short arguments
+			a = argv[ai];
+			while (*++a != 0) switch (*a) {
+			case 'F':
+				opt_currentmode = MODE_FUZZER;
+				break;
+			case 'L':
+				if (ai + 1 < argc) {
+					immutable(char)* fp = argv[ai + 1];
+					if (os_pexist(fp) == 0) {
+						puts("File not found");
+						return 3;
+					}
+					if (os_pisdir(fp)) {
+						puts("Path is directory");
+						return 4;
+					}
+				} else {
+					puts("File argument missing for -L");
+					return 2;
+				}
+				opt_currentmode = MODE_LATENCY;
+				latency_settings.runs = RUNS;
+				break;
+			case 'h', '?': phelp; return 0;
+			case 'v': pversion; return 0;
+			default:
+				printf("Unknown parameter: %c\n", *a);
+				return 1;
+			} // while/switch
 		} // else if
 	} // while arg
-	
-	version (X86_ANY) {
-		if (core_check == 0) {
-			puts("ABORT: RDTSC instruction not available");
-			return 1;
-		}
+
+	switch (opt_currentmode) {
+	case MODE_LATENCY:
+		start_latency;
+		break;
+//	case MODE_FUZZER:
+//		start_fuzzer;
+//		break;
+	default: // MODE_NONE
+		puts("Please select an operation mode");
+		return 1;
 	}
-
-	if (os_pexist(argv[1]) == 0) {
-		puts("ABORT: Path not found");
-		return 2;
-	}
-
-	if (os_pisdir(argv[1])) {
-		puts("ABORT: Path is a directory");
-		return 3;
-	}
-
-	printf("file: %s\n", argv[1]);
-
-	seh_init;
-
-	core_init;	// init ddcputester
-	debug printf("delta penalty: %d\n", delta);
-
-	switch (core_load_file(argv[1])) {
-		case 0: break;
-		case 1:
-			puts("ABORT: File could not be opened");
-			return 4;
-		default:
-			puts("ABORT: Unknown error on file load");
-			return 0xfe;
-	}
-
-	__TEST_SETTINGS s = void;
-	s.runs = RUNS;
-	float result = core_test(&s);
-	printf("Result: %f cycles\n", result);
 
 	return 0;
 }

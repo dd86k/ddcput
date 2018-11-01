@@ -123,13 +123,13 @@ int os_gcwd(char* p) {
  * Returns: Non-zero if exists
  */
 extern (C)
-int os_pexist(char* p) {
+int os_pexist(immutable(char)* p) {
 	version (Windows) {
 		import core.sys.windows.windows : GetFileAttributesA;
 		return GetFileAttributesA(p) != 0xFFFF_FFFF;
 	}
 	version (Posix) {
-		import core.sys.posix.sys.stat;
+		import core.sys.posix.sys.stat : stat_t, stat;
 		stat_t s = void;
 		return stat(p, &s) == 0;
 	}
@@ -140,7 +140,7 @@ int os_pexist(char* p) {
  * Returns: Non-zero if directory
  */
 extern (C)
-int os_pisdir(char* p) {
+int os_pisdir(immutable(char)* p) {
 	version (Windows) {
 		import core.sys.windows.windows :
 			GetFileAttributesA, FILE_ATTRIBUTE_DIRECTORY;

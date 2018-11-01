@@ -1,7 +1,7 @@
 module seh_windows;
 
 import core.stdc.stdio : printf;
-import ddcputester : putchar;
+import misc : putchar;
 
 extern (C)
 public void seh_init() {
