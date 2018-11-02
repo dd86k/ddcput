@@ -11,13 +11,13 @@ version (X86) {
 } else version (X86_64) {
 	enum PLATFORM = "amd64";	/// Compiled platform
 } else version (ARM) {
-	enum PLATFORM = "ARM";	/// Compiled platform
+	enum PLATFORM = "arm";	/// Compiled platform
 	static assert(0,
 		"ddcputester is currently only supported on x86");
 }
 
 enum : ubyte {
-	MODE_NONE,	/// other
+	MODE_NONE,	/// none/other
 	MODE_LATENCY,	/// Latency tester, -L
 	MODE_FUZZER,	/// Fuzzer feature, -F
 }
@@ -28,8 +28,9 @@ __gshared ubyte opt_currentmode; /// Current operation mode, defaults to MODE_NO
 extern (C) void phelp() {
 	puts(
 		"ddcputester, processor testing tool\n"~
-		"  ddcputester -SL [FILE]\n\n"~
-		"  FILE        (-L) File containing instructions to measure latency"
+		"  Usage: ddcputester -SL [FILE]\n\n"~
+		"\n"~
+		"FILE        (-L) File containing instructions to measure latency"
 	);
 }
 
@@ -71,21 +72,21 @@ int main(const int argc, immutable(char)** argv) {
 				opt_currentmode = MODE_FUZZER;
 				break;
 			case 'L':
-				if (ai + 1 < argc) {
-					immutable(char)* fp = argv[ai + 1];
-					if (os_pexist(fp) == 0) {
-						puts("File not found");
-						return 3;
-					}
-					if (os_pisdir(fp)) {
-						puts("Path is directory");
-						return 4;
-					}
-				} else {
+				if (ai + 1 >= argc) {
 					puts("File argument missing for -L");
 					return 2;
 				}
+				immutable(char)* fp = argv[ai + 1];
+				if (os_pexist(fp) == 0) {
+					puts("File not found");
+					return 3;
+				}
+				if (os_pisdir(fp)) {
+					puts("Path is directory");
+					return 4;
+				}
 				opt_currentmode = MODE_LATENCY;
+				latency_settings.filepath = fp;
 				latency_settings.runs = RUNS;
 				break;
 			case 'h', '?': phelp; return 0;
@@ -101,9 +102,11 @@ int main(const int argc, immutable(char)** argv) {
 	case MODE_LATENCY:
 		start_latency;
 		break;
-//	case MODE_FUZZER:
-//		start_fuzzer;
-//		break;
+	debug {
+	case MODE_FUZZER:
+		start_fuzzer;
+		break;
+	}
 	default: // MODE_NONE
 		puts("Please select an operation mode");
 		return 1;

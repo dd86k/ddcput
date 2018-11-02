@@ -137,6 +137,7 @@ int os_pexist(immutable(char)* p) {
 
 /**
  * Verifies if given path is a directory
+ * Params: p = Path to check
  * Returns: Non-zero if directory
  */
 extern (C)
