@@ -1,52 +1,57 @@
 # DDCPUTESTER, Processor testing tool
 
 ddcputester is a micro-processor testing utility that can:
- - Measure user-code instruction throughput/latency.
-
-NOTICE: Currently checking why release builds are crashing right after calling
-the memory block (e.g. how is the ABI affected in optimizations). This affects
-Windows builds so far.
+- Measure user-code instruction latency.
 
 ## OPERATING SYSTEM SUPPORT
 
-| Platform (ABI) / ISA | x86 | AMD64 |
+| Platform | Latency Tester | Fuzzer |
 |---|---|---|
-| Windows | ✔️ (5.1+) | ✔️ (6.0+) |
-| macOS | N/A | On wait^1 |
-| Linux (System V) | Planned | On wait^2 |
+| Windows-x86 | ✔️ (5.1+) [2] | 🔄 ongoing |
+| Windows-amd64 | ✔️ (6.0+) [2] | 🔄 ongoing |
+| macOS-amd64 | Planned [1] | Planned [1] |
+| Linux-x86 | Planned | Planned |
+| Linux-amd64 | Planned | Planned |
+| efi-amd64 | Considering | Considering |
+| baremetal-x86 | Considering | Considering |
+| baremetal-amd64 | Considering | Considering |
 
-^1: Until I get a macOS VM or someone willing to implement the necessities
+[1] Until I get a macOS VM or someone willing to implement the necessities
 
-^2: See NOTICE above
+[2] Currently checking why release builds are crashing right after calling
+the memory block (e.g. how is the ABI affected in optimizations). This affects
+Windows builds so far.
 
-(x86) This tool is NOT supported in REAL-MODE and vm8086.
+### NOTES
+
+(x86/amd64) This tool is NOT supported in real and vm8086 modes.
 
 # USAGE
 
-In order to test user-generated code:
-- Binary code MUST be flat (-fbin on NASM);
-- It MUST NOT return (RET nor LEAVE);
-- And the flow must reach the end of your code.
+## Latency Tester
 
-## x86 REGISTER USAGE
+- Binary code (file) MUST be flat (-fbin on NASM);
+- It MUST NOT return (RET, LEAVE, etc.);
+- And the flow must reach past the end of your code.
+  - The tool inserts its own post-test code.
 
-EDI and ESI registers are reserved.
+### REGISTER USAGE
 
-## AMD64 REGISTER USAGE
+(x86) EDI and ESI registers are reserved.
 
-RDI and RSI registers are reserved.
+(amd64) RDI and RSI registers are reserved.
 
-## X86 PITFALLS
+# X86 PITFALLS
 
 x86 is a complex ISA, it might happen that assemblers do not know the full context
 of the source code and may generate improper code.
 
-### OPCODE PREFIX
+## OPCODE PREFIX
 
 In x86 (long compability mode), NASM might prefix a MOV instruction with an
-OPCODE prefix (66h), even if BITS 32 is specified.
+OPCODE prefix (66h), even if BITS 32 is specified (not present in BITS 64).
 
-For example, a `mov eax, 0` instruction would be encoded like so:
+For example, a `mov eax, 0` instruction should be encoded like so:
 ```
 B8 00 00 00 00
 ```
@@ -56,17 +61,19 @@ However, if the instruction is encoded like so:
 66 B8 00 00 00 00
 ```
 
-The processor may attempt to move a WORD (2 bytes) and move the Instruction Pointer
-to the next two bytes: 00 00h, which is encoded like `mov [eax], al`, and since
-EAX=0 in this case (from ModR/M byte), it will attempt to write at address 0h and
-effectively segfault (#UD).
-
-# TODO
-
-- Clear all registers before running user-code
+The processor will move a WORD (2 bytes) and move the Instruction Pointer
+to the next two bytes: 00 00h, which is encoded like `add [eax], al`, and since
+EAX=0 in this case, it will attempt to write at address 0h and effectively
+segfault (#UD).
 
 # DISCLAIMER
 
-SINCE THIS TOOL DIRECTLY RUNS USER GENERATED BINARY CODE, THIS TOOL IS ENTIRELY UNSECURE. MAKE SURE THIS TOOL IS NOT AVALAIBLE WITHIN YOUR $PATH (OR %PATH%) FOR SECURITY REASONS.
+SINCE THIS TOOL DIRECTLY RUNS USER GENERATED BINARY CODE, THIS TOOL IS ENTIRELY
+UNSECURE. MAKE SURE THIS TOOL IS NOT AVALAIBLE WITHIN YOUR $PATH (OR %PATH%)
+FOR SECURITY REASONS. **NEVER** RUN CODE THAT YOU DO NOT TRUST (i.e. COMPILED
+BY ANOTHER PERSON, ONLINE EXAMPLES).
 
-See LICENSE for more information
+LATENCY RESULTS ARE BASED ON THE NUMBER OF TIMES THEY RAN, THE HIGHER THE COUNT,
+THE HIGHER PRECISION. HOWEVER, THE LATENCY TESTS ARE STILL AVERAGE.
+
+See LICENSE for more information.
