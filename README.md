@@ -1,6 +1,6 @@
-# DDCPUTESTER, Processor testing tool
+# DDCPUT, Processor testing tool
 
-ddcputester is a micro-processor testing utility that can:
+ddcput is a micro-processor testing utility that can:
 - Measure user-code instruction latency.
 
 ## OPERATING SYSTEM SUPPORT
@@ -30,10 +30,14 @@ Windows builds so far.
 
 ## Latency Tester
 
-- Binary code (file) MUST be flat (-fbin on NASM);
+Currently, the latency tester will run instructions depending on the compiled
+binary. For example, the amd64 build will only run amd64 code while the x86
+builds will run x86 code. A feature to run x86 code in amd64 is planned.
+
+- Binary code (file) _must_ be flat (i.e. -fbin on NASM);
 - It MUST NOT return (RET, LEAVE, etc.);
 - And the flow must reach past the end of your code.
-  - The tool inserts its own post-test code.
+  - The tool inserts its own pre-test and post-test code.
 
 ### REGISTER USAGE
 
@@ -43,12 +47,12 @@ Windows builds so far.
 
 # X86 PITFALLS
 
-x86 is a complex ISA, it might happen that assemblers do not know the full context
-of the source code and may generate improper code.
+x86 is a complex ISA, it might happen that assemblers do not know the full
+context of the source code and may generate improper code.
 
 ## OPCODE PREFIX
 
-In x86 (long compability mode), NASM might prefix a MOV instruction with an
+In x86 ("long compability mode"), NASM might prefix a MOV instruction with an
 OPCODE prefix (66h), even if BITS 32 is specified (not present in BITS 64).
 
 For example, a `mov eax, 0` instruction should be encoded like so:
@@ -69,11 +73,11 @@ segfault (#UD).
 # DISCLAIMER
 
 SINCE THIS TOOL DIRECTLY RUNS USER GENERATED BINARY CODE, THIS TOOL IS ENTIRELY
-UNSECURE. MAKE SURE THIS TOOL IS NOT AVALAIBLE WITHIN YOUR $PATH (OR %PATH%)
-FOR SECURITY REASONS. **NEVER** RUN CODE THAT YOU DO NOT TRUST (i.e. COMPILED
-BY ANOTHER PERSON, ONLINE EXAMPLES).
+UNSECURE. MAKE SURE THIS TOOL IS NOT AVALAIBLE WITHIN YOUR PATH FOR SECURITY
+REASONS. **NEVER** RUN CODE THAT YOU DO NOT TRUST (i.e. COMPILED BY ANOTHER
+PERSON, ONLINE EXAMPLES).
 
-LATENCY RESULTS ARE BASED ON THE NUMBER OF TIMES THEY RAN, THE HIGHER THE COUNT,
-THE HIGHER PRECISION. HOWEVER, THE LATENCY TESTS ARE STILL AVERAGE.
+LATENCY RESULTS ARE BASED ON THE NUMBER OF TIMES THEY RAN, THE HIGHER THE
+COUNT, THE HIGHER PRECISION. HOWEVER, THE LATENCY TESTS ARE STILL AVERAGE.
 
 See LICENSE for more information.

@@ -1,5 +1,7 @@
 module test_fuzzer;
 
+import memmgr;
+
 version (X86) {
 	enum OP_RET = 0xC3;
 } else version (X86_64) {

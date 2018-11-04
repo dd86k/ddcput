@@ -1,8 +1,9 @@
 import core.stdc.stdio;
 
-import ddcputester;
+import ddcput;
 import os_utils;
 import test_latency;
+import test_fuzzer;
 
 enum APP_VERSION = "0.0.0"; /// Application version
 
@@ -27,17 +28,20 @@ __gshared ubyte opt_currentmode; /// Current operation mode, defaults to MODE_NO
 /// Print help
 extern (C) void phelp() {
 	puts(
-		"ddcputester, processor testing tool\n"~
-		"  Usage: ddcputester -SL [FILE]\n\n"~
+		"ddcput, processor testing tool\n"~
+		"  Usage:\n"~
+		"    ddcputester -L [FILE]\n"~
+		"    ddcputester -F\n"~
+		"    ddcputester -v|-h|--version|--help\n"~
 		"\n"~
-		"FILE        (-L) File containing instructions to measure latency"
+		"  (-L) FILE        File containing instructions to measure latency\n"
 	);
 }
 
 /// Print version
 extern (C) void pversion() {
 	printf(
-		"ddcputester-"~PLATFORM~" v"~APP_VERSION~"  ("~__TIMESTAMP__~")\n"~
+		"ddcput-"~PLATFORM~" v"~APP_VERSION~"  ("~__TIMESTAMP__~")\n"~
 		"License: MIT <https://opensource.org/licenses/MIT>\n"~
 		"Compiler: "~__VENDOR__~" v%u\n",
 		__VERSION__
@@ -72,7 +76,7 @@ int main(const int argc, immutable(char)** argv) {
 				opt_currentmode = MODE_FUZZER;
 				break;
 			case 'L':
-				if (ai + 1 >= argc) {
+				if (ai + 1 >= argc) { // temp until -b/-i idk
 					puts("File argument missing for -L");
 					return 2;
 				}

@@ -1,4 +1,4 @@
-module ddcputester;
+module ddcput;
 
 import core.stdc.stdio;
 import memmgr;
