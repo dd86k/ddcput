@@ -15,7 +15,9 @@ import core.sys.posix.sys.mman :
 	PROT_READ, PROT_WRITE, PROT_EXEC, MAP_ANON, MAP_PRIVATE;
 }
 
-// Page sizes may vary between 4K, 2M, and 1G
+extern (C):
+
+// Page sizes may vary between 4K, 2M, 4M, and 1G
 // (Posix) Normally check with sysconf(_POSIX_FOO) then
 // sysconf(_SC_PAGESIZE/PAGESIZE) to get pagesize in bytes
 // (Windows) Normally check with GetSystemInfo->_SYSTEM_INFO.dwPageSize.
@@ -39,7 +41,7 @@ __gshared __ASMBUF* asmbuf = void;
  * (Posix) Calls mmap with PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE
  * Returns: A __ASMBUF pointer to the memory block
  */
-__ASMBUF* __asm_create() {
+__ASMBUF* __mem_create() {
 version (Windows) {
 	return cast(__ASMBUF*)VirtualAlloc(
 		NULL, __ASMBUF.sizeof, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE
@@ -53,12 +55,13 @@ version (Posix) {
 }
 
 /**
- * Protect a memory block, used to prep up a block before execution
+ * Protect a memory block as readable and executable.
  * (Windows) Calls VirtualProtect with PAGE_EXECUTE_READ
  * (Posix) Calls mprotect with PROT_READ | PROT_EXEC
  * Params: s = Memory block to protect
+ * Notes: While Windows' VirtualAlloc function
  */
-void __asm_protect(__ASMBUF* s) {
+void __mem_protect(__ASMBUF* s) {
 version (Windows) {
 	uint e = void;
 	debug {
@@ -66,7 +69,7 @@ version (Windows) {
 		printf("%s\n",
 			VirtualProtect(s, __ASMBUF.sizeof, PAGE_EXECUTE_READ, &e) ?
 			"OK" : cast(char*)"FAIL");
-	}
+	} else VirtualProtect(s, __ASMBUF.sizeof, PAGE_EXECUTE_READ, &e);
 	/*debug {
 		printf("[debug] VirtualLock: ");
 		printf("%s\n",
@@ -78,8 +81,27 @@ version (Posix) {
 }
 }
 
-//TODO: __asm_unprotect
-
+//TODO: __mem_unprotect
+/**
+ * Un-protect a memory block, making the memory block readable and writable.
+ * (Windows) Calls VirtualProtect with PAGE_READWRITE
+ * (Posix) Calls mprotect with PROT_READ | PROT_WRITE
+ * Params: s = Memory block to unprotect
+ */
+void __mem_unprotect(__ASMBUF* s) {
+version (Windows) {
+	uint e = void;
+	debug {
+		printf("[debug] VirtualProtect: ");
+		printf("%s\n",
+			VirtualProtect(s, __ASMBUF.sizeof, PAGE_READWRITE, &e) ?
+			"OK" : cast(char*)"FAIL");
+	} else VirtualProtect(s, __ASMBUF.sizeof, PAGE_READWRITE, &e);
+}
+version (Posix) {
+	mprotect(s, __ASMBUF.sizeof, PROT_READ | PROT_WRITE);
+}
+}
 
 /**
  * Free a memory block
@@ -87,7 +109,7 @@ version (Posix) {
  * (Posix) Calls munmap
  * Params: s = Memory block to free
  */
-void __asm_free(__ASMBUF* s) {
+void __mem_free(__ASMBUF* s) {
 version (Windows) {
 	VirtualFree(s, 0, MEM_RELEASE);
 }

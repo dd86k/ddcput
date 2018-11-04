@@ -272,5 +272,5 @@ version (Win32) {
 }
 
 struct M128A { align(1):
-	ulong low; 	ulong high;
+	ulong low; ulong high;
 }

@@ -12,10 +12,12 @@ struct fuzzer_s {
 
 }
 
+extern (C):
+
 __gshared fuzzer_s fuzzer_settings = void;
 
 int start_fuzzer() {
-	asmbuf = __asm_create;
+	asmbuf = __mem_create;
 
 	
 

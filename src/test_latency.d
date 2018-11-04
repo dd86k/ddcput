@@ -193,8 +193,8 @@ _TEST:
 		printf("[debug] %u %u\n", s.t2_h, s.t2_l);
 	}
 
-	debug puts("[debug] __asm_create");
-	asmbuf = __asm_create;
+	debug puts("[debug] __mem_create");
+	asmbuf = __mem_create;
 	if (cast(size_t)asmbuf == 0) {
 		puts("Could not initialize ASMBUF");
 	}
@@ -268,8 +268,8 @@ int core_load_file(immutable(char)* path) {
 		putchar('\n');
 	}
 
-	debug puts("[debug] __asm_protect");
-	__asm_protect(asmbuf);
+	debug puts("[debug] __mem_protect");
+	__mem_protect(asmbuf);
 
 	return 0;
 }
