@@ -4,6 +4,16 @@ import core.stdc.stdio;
 import memmgr;
 import misc;
 
+struct settings_s {
+	/// (Latency) Number of times to loop code
+	/// (Fuzzer) Number of times to generate and execute instructions
+	uint runs; /// Number of runs to perform
+	immutable(char)* filepath; /// File to test upon, if provided
+	uint delta; /// (x86) Moving results from RDTSC penalty
+}
+
+__gshared settings_s Settings = void;
+
 /**
  * Mingle two 4-byte numbers into an 8-byte number.
  * Params:

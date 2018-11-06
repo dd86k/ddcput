@@ -2,72 +2,65 @@ module test_latency;
 
 import core.stdc.stdio :
 	puts, printf, FILE, fopen, fseek, ftell, fread, SEEK_SET, SEEK_END;
+import ddcput : Settings;
 import os_utils;
 import memmgr;
 import misc;
 
-debug enum RUNS = 50;	/// Number of times to run the test
-else  enum RUNS = 50_000;	/// Number of times to run the test
-
-struct latency_s {
-	uint runs; /// Number of runs to perform
-	immutable(char)* filepath; /// File to test upon
-	uint delta; /// (x86) Moving results from RDTSC penalty
-}
-
-__gshared latency_s latency_settings = void;
+debug enum DEFAULT_RUNS = 50;	/// Number of times to run the test
+else  enum DEFAULT_RUNS = 50_000;	/// Number of times to run the test
 
 // NOTE: *_TEST.size code arrays returns _pointer_ size
 version (X86) {
-	version (Windows) {
-		immutable ubyte* PRE_TEST = [
-			// test -- Sets [ecx+4], 1234 and returns
-			//0x8B, 0x4C, 0x24, 0x04, 0xC7, 0x01, 0xD2, 0x04, 0x00, 0x00, 0xC3
+version (Windows) {
+	immutable ubyte* PRE_TEST = [
+		// test -- Sets [ecx+4], 1234 and returns
+		//0x8B, 0x4C, 0x24, 0x04, 0xC7, 0x01, 0xD2, 0x04, 0x00, 0x00, 0xC3
 
-			// pre-x86-windows.asm
-			0x8B, 0x4C, 0x24, 0x04, 0x89, 0x79, 0x14, 0x89, 0x71, 0x18, 0x89, 0xCE,
-			0x8B, 0x7E, 0x10, 0x0F, 0x31, 0x89, 0x06, 0x89, 0x56, 0x04
-		];
-		enum PRE_TEST_SIZE = 22;
+		// pre-x86-windows.asm
+		0x8B, 0x4C, 0x24, 0x04, 0x89, 0x79, 0x14, 0x89, 0x71, 0x18, 0x89, 0xCE,
+		0x8B, 0x7E, 0x10, 0x0F, 0x31, 0x89, 0x06, 0x89, 0x56, 0x04
+	];
+	enum PRE_TEST_SIZE = 22;
 
-		immutable ubyte* POST_TEST = [
-			// post-x86-windows.asm
-			0x4F, 0x0F, 0x85, 0xF9, 0xFF, 0xFF, 0xFF, 0x0F, 0x31, 0x89, 0x46, 0x08,
-			0x89, 0x56, 0x0C, 0x89, 0xF1, 0x8B, 0x79, 0x14, 0x8B, 0x71, 0x18, 0xC3
-		];
-		enum POST_TEST_SIZE = 24;
-		enum POST_TEST_JMP = 3;	/// Jump patch offset, 0-based, aims at lowest byte
-		enum POST_TEST_OFFSET_JMP = 7;	// DEC+JMP+IMM32
-	} // version Windows
+	immutable ubyte* POST_TEST = [
+		// post-x86-windows.asm
+		0x4F, 0x0F, 0x85, 0xF9, 0xFF, 0xFF, 0xFF, 0x0F, 0x31, 0x89, 0x46, 0x08,
+		0x89, 0x56, 0x0C, 0x89, 0xF1, 0x8B, 0x79, 0x14, 0x8B, 0x71, 0x18, 0xC3
+	];
+	enum POST_TEST_SIZE = 24;
+	enum POST_TEST_JMP = 3;	/// Jump patch offset, 0-based, aims at lowest byte
+	enum POST_TEST_OFFSET_JMP = 7;	// DEC+JMP+IMM32
+} // version Windows
 
-	version (linux) {
-		static assert(0, "x86-linux PRE_TEST code needed");
-		static assert(0, "x86-linux POST_TEST code needed");
-	} // version linux
+version (linux) {
+	static assert(0, "x86-linux PRE_TEST code needed");
+	static assert(0, "x86-linux POST_TEST code needed");
+} // version linux
 } else version (X86_64) {
-	version (Windows) {
-		immutable ubyte* PRE_TEST = [
-			// pre-amd64-windows.asm
-			0x48, 0x89, 0x79, 0x14, 0x48, 0x89, 0x71, 0x1C, 0x48, 0x89, 0xCE, 0x48,
-			0x31, 0xFF, 0x8B, 0x7E, 0x10, 0x0F, 0x31, 0x89, 0x06, 0x89, 0x56, 0x04
-		];
-		enum PRE_TEST_SIZE = 24;
+version (Windows) {
+	immutable ubyte* PRE_TEST = [
+		// pre-amd64-windows.asm
+		0x48, 0x89, 0x79, 0x14, 0x48, 0x89, 0x71, 0x1C, 0x48, 0x89, 0xCE, 0x48,
+		0x31, 0xFF, 0x8B, 0x7E, 0x10, 0x0F, 0x31, 0x89, 0x06, 0x89, 0x56, 0x04
+	];
+	enum PRE_TEST_SIZE = 24;
 
-		immutable ubyte* POST_TEST = [
-			// post-amd64-windows.asm
-			0x48, 0xFF, 0xCF, 0x0F, 0x85, 0x00, 0x00, 0x00, 0x00, 0x0F, 0x31, 0x89,
-			0x46, 0x08, 0x89, 0x56, 0x0C, 0x48, 0x89, 0xF1, 0x48, 0x8B, 0x79, 0x14,
-			0x48, 0x8B, 0x71, 0x18, 0xC3
-		];
-		enum POST_TEST_SIZE = 29;
-		enum POST_TEST_JMP = 5;	/// Jump patch offset, 0-based, aims at lowest byte
-		enum POST_TEST_OFFSET_JMP = 9;	// DEC+JMP+IMM32
-	}
+	immutable ubyte* POST_TEST = [
+		// post-amd64-windows.asm
+		0x48, 0xFF, 0xCF, 0x0F, 0x85, 0x00, 0x00, 0x00, 0x00, 0x0F, 0x31, 0x89,
+		0x46, 0x08, 0x89, 0x56, 0x0C, 0x48, 0x89, 0xF1, 0x48, 0x8B, 0x79, 0x14,
+		0x48, 0x8B, 0x71, 0x18, 0xC3
+	];
+	enum POST_TEST_SIZE = 29;
+	enum POST_TEST_JMP = 5;	/// Jump patch offset, 0-based, aims at lowest byte
+	enum POST_TEST_OFFSET_JMP = 9;	// DEC+JMP+IMM32
+}
 
-	version (linux) {
-		static assert(0, "amd64-linux PRE_TEST code needed");
-		static assert(0, "amd64-linux POST_TEST code needed");
-	}
+version (linux) {
+	static assert(0, "amd64-linux PRE_TEST code needed");
+	static assert(0, "amd64-linux POST_TEST code needed");
+}
 }
 
 debug pragma(msg, "sizeof(__TEST_SETTINGS): ", __TEST_SETTINGS.sizeof);
@@ -98,11 +91,11 @@ struct __TEST_SETTINGS { align(1):
 	}
 }
 
-pragma(msg, "t1_l->", __TEST_SETTINGS.t1_l.offsetof);
-pragma(msg, "t1_h->", __TEST_SETTINGS.t1_h.offsetof);
-pragma(msg, "t2_l->", __TEST_SETTINGS.t2_l.offsetof);
-pragma(msg, "t2_h->", __TEST_SETTINGS.t2_h.offsetof);
-pragma(msg, "runs->", __TEST_SETTINGS.runs.offsetof);
+pragma(msg, "__TEST_SETTINGS.t1_l@", __TEST_SETTINGS.t1_l.offsetof);
+pragma(msg, "__TEST_SETTINGS.t1_h@", __TEST_SETTINGS.t1_h.offsetof);
+pragma(msg, "__TEST_SETTINGS.t2_l@", __TEST_SETTINGS.t2_l.offsetof);
+pragma(msg, "__TEST_SETTINGS.t2_h@", __TEST_SETTINGS.t2_h.offsetof);
+pragma(msg, "__TEST_SETTINGS.runs@", __TEST_SETTINGS.runs.offsetof);
 
 int start_latency() {
 	if (core_check == 0) {
@@ -110,12 +103,12 @@ int start_latency() {
 		return 1;
 	}
 
-	debug printf("file: %s\n", latency_settings.filepath);
+	debug printf("file: %s\n", Settings.filepath);
 
 	core_init;	// init ddcputester
-	debug printf("delta penalty: %d\n", latency_settings.delta);
+	debug printf("delta penalty: %d\n", Settings.delta);
 
-	switch (core_load_file(latency_settings.filepath)) {
+	switch (core_load_file(Settings.filepath)) {
 	case 0: break;
 	case 1:
 		puts("ABORT: File could not be opened");
@@ -126,7 +119,7 @@ int start_latency() {
 	}
 
 	__TEST_SETTINGS s = void;
-	s.runs = RUNS;
+	s.runs = DEFAULT_RUNS;
 	const float result = core_test(&s);
 	printf("Result: ~%f cycles\n", result);
 
@@ -152,14 +145,12 @@ uint core_check() {
 	}
 }
 
-/// Initiates essential stuff
-/// - Calculate delta penalty for measuring 
-/// - Create memory buffer
+/// Initiates essential stuff and calculate delta penalty for measuring
 extern (C)
 void core_init() {
 	debug puts("[debug] rdtsc+mov penalty");
 	__TEST_SETTINGS s;
-	s.runs = RUNS;
+	s.runs = DEFAULT_RUNS;
 	version (X86) asm {
 		lea ESI, s;
 		mov EDI, [ESI + 16];
@@ -187,18 +178,18 @@ _TEST:
 		mov [RSI + 8], EAX;
 		mov [RSI + 12], EDX;
 	}
-	latency_settings.delta = cast(uint)((cast(float)s.t2_l - s.t1_l) / RUNS);
+	Settings.delta = cast(uint)((cast(float)s.t2_l - s.t1_l) / DEFAULT_RUNS);
 	debug {
 		printf("[debug] %u %u\n", s.t1_h, s.t1_l);
 		printf("[debug] %u %u\n", s.t2_h, s.t2_l);
 	}
 
 	debug puts("[debug] __mem_create");
-	asmbuf = __mem_create;
-	if (cast(size_t)asmbuf == 0) {
-		puts("Could not initialize ASMBUF");
+	mainbuf = __mem_create;
+	if (cast(size_t)mainbuf == 0) {
+		puts("Could not initialize mainbuf");
 	}
-	asmbuf.code[0] = 0;	// test write
+	mainbuf.code[0] = 0;	// test write
 }
 
 /**
@@ -215,7 +206,7 @@ int core_load_file(immutable(char)* path) {
 	import core.stdc.string : memmove;
 	import os_utils : os_pexist;
 
-	ubyte* buf = cast(ubyte*)asmbuf;
+	ubyte* buf = cast(ubyte*)mainbuf;
 
 	// pre-test code
 	debug puts("[debug] pre-test memmove");
@@ -250,7 +241,7 @@ int core_load_file(immutable(char)* path) {
 
 	debug {
 		printf("%d -- %X)\n", jmp, jmp);
-		ubyte* p = cast(ubyte*)asmbuf;
+		ubyte* p = cast(ubyte*)mainbuf;
 
 		uint m = PRE_TEST_SIZE;
 		printf("[debug] PRE [%3d] -- ", m);
@@ -269,7 +260,7 @@ int core_load_file(immutable(char)* path) {
 	}
 
 	debug puts("[debug] __mem_protect");
-	__mem_protect(asmbuf);
+	__mem_protect(mainbuf);
 
 	return 0;
 }
@@ -279,7 +270,7 @@ float core_test(__TEST_SETTINGS* s) {
 	version (X86) asm { mov EDI, s; }
 	version (X86_64) asm { mov RDI, s; }
 	asm {
-		mov ESI, RUNS;
+		mov ESI, DEFAULT_RUNS;
 		rdtsc;
 		mov [EDI], EAX;
 		mov [EDI + 4], EDX;
@@ -297,13 +288,13 @@ _TEST:
 		printf("%u %u\n", s.t1_h, s.t1_l);
 		printf("%u %u\n", s.t2_h, s.t2_l);
 	}
-	return (cast(float)s.t2_l - s.t1_l - delta) / RUNS;
+	return (cast(float)s.t2_l - s.t1_l - delta) / DEFAULT_RUNS;
 }*/
 
 float core_test(__TEST_SETTINGS* s) {
 	debug puts("[debug] get __test");
 	extern (C) void function(__TEST_SETTINGS*)
-		__test = cast(void function(__TEST_SETTINGS*))asmbuf;
+		__test = cast(void function(__TEST_SETTINGS*))mainbuf;
 
 	debug puts("[debug] call __test");
 	__test(s);
@@ -313,5 +304,5 @@ float core_test(__TEST_SETTINGS* s) {
 		printf("[debug] %u %u\n", s.t2_h, s.t2_l);
 	}
 
-	return (cast(float)s.t2_l - s.t1_l - latency_settings.delta) / RUNS;
+	return (cast(float)s.t2_l - s.t1_l - Settings.delta) / DEFAULT_RUNS;
 }

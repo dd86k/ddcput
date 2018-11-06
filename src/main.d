@@ -90,8 +90,8 @@ int main(const int argc, immutable(char)** argv) {
 					return 4;
 				}
 				opt_currentmode = MODE_LATENCY;
-				latency_settings.filepath = fp;
-				latency_settings.runs = RUNS;
+				Settings.filepath = fp;
+				Settings.runs = DEFAULT_RUNS;
 				break;
 			case 'h', '?': phelp; return 0;
 			case 'v': pversion; return 0;
