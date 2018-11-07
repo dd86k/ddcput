@@ -70,6 +70,8 @@ ulong mlem(uint high, uint low) {
 
 unittest {
 	import std.stdio : writefln;
+	import test_latency;
+
 	writefln("mlem: %X", mlem(0x11223344, 0xAABBCCDD));
 	assert(mlem(0x11223344, 0xAABBCCDD) == 0x11223344_AABBCCDD);
 

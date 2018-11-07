@@ -64,17 +64,7 @@ version (Posix) {
 void __mem_protect(__membuf_s* s) {
 version (Windows) {
 	uint e = void;
-	debug {
-		printf("[debug] VirtualProtect: ");
-		printf("%s\n",
-			VirtualProtect(s, __membuf_s.sizeof, PAGE_EXECUTE_READ, &e) ?
-			"OK" : cast(char*)"FAIL");
-	} else VirtualProtect(s, __membuf_s.sizeof, PAGE_EXECUTE_READ, &e);
-	/*debug {
-		printf("[debug] VirtualLock: ");
-		printf("%s\n",
-			VirtualLock(s, __membuf_s.sizeof) ? "OK" : cast(char*)"FAIL");
-	}*/
+	VirtualProtect(s, __membuf_s.sizeof, PAGE_EXECUTE_READ, &e);
 }
 version (Posix) {
 	mprotect(s, __membuf_s.sizeof, PROT_READ | PROT_EXEC);
@@ -90,12 +80,7 @@ version (Posix) {
 void __mem_unprotect(__membuf_s* s) {
 version (Windows) {
 	uint e = void;
-	debug {
-		printf("[debug] VirtualProtect: ");
-		printf("%s\n",
-			VirtualProtect(s, __membuf_s.sizeof, PAGE_READWRITE, &e) ?
-			"OK" : cast(char*)"FAIL");
-	} else VirtualProtect(s, __membuf_s.sizeof, PAGE_READWRITE, &e);
+	VirtualProtect(s, __membuf_s.sizeof, PAGE_READWRITE, &e);
 }
 version (Posix) {
 	mprotect(s, __membuf_s.sizeof, PROT_READ | PROT_WRITE);

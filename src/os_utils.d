@@ -154,3 +154,10 @@ int os_pisdir(immutable(char)* p) {
 		return s.st_mode & S_IFDIR;
 	}
 }
+
+int os_tick() {
+version (Windows) {
+	import core.sys.windows.windows : GetTickCount;
+	return GetTickCount;
+}
+}

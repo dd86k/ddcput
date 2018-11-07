@@ -74,21 +74,17 @@ int main(const int argc, immutable(char)** argv) {
 			while (*++a != 0) switch (*a) {
 			case 'F':
 				opt_currentmode = MODE_FUZZER;
+				Settings.runs = DEFAULT_RUNS;
 				break;
 			case 'L':
+				//TODO: 
 				if (ai + 1 >= argc) { // temp until -b/-i idk
 					puts("File argument missing for -L");
 					return 2;
 				}
 				immutable(char)* fp = argv[ai + 1];
-				if (os_pexist(fp) == 0) {
-					puts("File not found");
-					return 3;
-				}
-				if (os_pisdir(fp)) {
-					puts("Path is directory");
-					return 4;
-				}
+				const uint r = clicheckpath(fp);
+				if (r) return r;
 				opt_currentmode = MODE_LATENCY;
 				Settings.filepath = fp;
 				Settings.runs = DEFAULT_RUNS;
@@ -119,3 +115,14 @@ int main(const int argc, immutable(char)** argv) {
 	return 0;
 }
 
+int clicheckpath(immutable(char)* path) {
+	if (os_pexist(path) == 0) {
+		puts("File not found");
+		return 3;
+	}
+	if (os_pisdir(path)) {
+		puts("Path is directory");
+		return 4;
+	}
+	return 0;
+}

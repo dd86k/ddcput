@@ -1,7 +1,9 @@
 module test_fuzzer;
 
-import core.stdc.stdlib : rand;
+import ddcput : Settings;
 import memmgr;
+import rand;
+import misc : putchar;
 
 version (X86) {
 	enum ubyte OP_RET = 0xC3;
@@ -12,11 +14,38 @@ version (X86) {
 extern (C):
 
 int start_fuzzer() {
+	import core.stdc.stdio : printf;
+	import core.stdc.string : memset;
+
+	rinit;
+
 	mainbuf = __mem_create;
 
-	const uint size = rand & 0xF; // 0-15 seems decent
+	ubyte* mmp = cast(ubyte*)mainbuf;
+	size_t mmpi = void;
 
-	fgenerate(mainbuf, size);
+	extern (C) void function() __test = cast(void function())mainbuf;
+
+	while (--Settings.runs > 0) {
+		mmpi = 0;
+		memset(mainbuf, 0, 16);
+
+		const uint size = rnextb & 0xF; // 0-15 seems decent
+
+		fgenerate(mainbuf, size);
+
+		while (mmp[mmpi]) {
+			printf("%02X ", mmp[mmpi]);
+			++mmpi;
+		}
+		putchar('\n');
+
+		__mem_protect(mainbuf);
+		__test();
+		__mem_unprotect(mainbuf);
+	}
+
+
 
 	return 0;
 }
@@ -29,29 +58,44 @@ int start_fuzzer() {
  *   buffer = Live memory buffer
  *   size = Size in bytes, excluding RET instruction
  * Returns: Nothing
+ * Notes: Windows' RAND_MAX goes up to 0xFFFF
  */
-void fgenerate(__membuf_s* buffer, uint size) {
-	uint* up = cast(uint*)buffer;
+void fgenerate(__membuf_s* buffer, int size) {
+	ubyte* up = cast(ubyte*)buffer;
 
-	while (size -= 4 > 0)
-		*up++ = rand;
-	
-	ubyte* bp = cast(ubyte*)up;
+	uint i;
+	while (i < size) {
+		// Another time I could directly use rsamplei
+		*up++ = rnextb;
+		++i;
+	}
 
-	const uint r = rand;
-	switch (size) {
-	case 3:
-		*up = r & 0xFF_FFFF;
-		bp[3] = OP_RET;
-		break;
-	case 2:
-		*up = cast(ushort)r;
-		bp[2] = OP_RET;
-		break;
-	case 1:
-		*up = cast(ubyte)r;
-		bp[1] = OP_RET;
-		break;
-	default: // 0, or ????
+	*up = OP_RET;
+}
+
+unittest {
+	import std.stdio;
+
+	writeln("-- fgenerate 15");
+
+	ubyte[512] b;
+
+	fgenerate(cast(__membuf_s*)b, 15);
+
+	i = 0;
+	uint* bp = cast(uint*)b;
+	while (bp[i]) {
+		++i;
+		writefln("%08x", bp[i]);
+	}
+
+	writeln("-- fgenerate 16");
+
+	fgenerate(cast(__membuf_s*)b, 16);
+
+	i = 0;
+	while (bp[i]) {
+		++i;
+		writefln("%08x", bp[i]);
 	}
 }
