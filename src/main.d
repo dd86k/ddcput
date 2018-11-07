@@ -5,18 +5,9 @@ import os_utils;
 import seh;
 import test_latency;
 import test_fuzzer;
+import misc;
 
 enum APP_VERSION = "0.0.0"; /// Application version
-
-version (X86) {
-	enum PLATFORM = "x86";	/// Compiled platform
-} else version (X86_64) {
-	enum PLATFORM = "amd64";	/// Compiled platform
-} else version (ARM) {
-	enum PLATFORM = "arm";	/// Compiled platform
-	static assert(0,
-		"ddcputester is currently only supported on x86");
-}
 
 enum : ubyte {
 	MODE_NONE,	/// none/other

@@ -82,7 +82,7 @@ unittest {
 
 	fgenerate(cast(__membuf_s*)b, 15);
 
-	i = 0;
+	int i = 0;
 	uint* bp = cast(uint*)b;
 	while (bp[i]) {
 		++i;
