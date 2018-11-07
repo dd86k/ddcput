@@ -2,6 +2,7 @@ import core.stdc.stdio;
 
 import ddcput;
 import os_utils;
+import seh;
 import test_latency;
 import test_fuzzer;
 
@@ -97,6 +98,8 @@ int main(const int argc, immutable(char)** argv) {
 			} // while/switch
 		} // else if
 	} // while arg
+
+	seh_init;
 
 	switch (opt_currentmode) {
 	case MODE_LATENCY:
