@@ -118,7 +118,7 @@ int start_latency() {
 	__TEST_SETTINGS s = void;
 	s.runs = DEFAULT_RUNS;
 	const float result = core_test(&s);
-	printf("Result: ~%f cycles\n", result);
+	printf("~%f cycles, %d runs\n", result, Settings.runs);
 
 	return 0;
 }
