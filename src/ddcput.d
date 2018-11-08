@@ -1,18 +1,36 @@
+// Main module
+
 module ddcput;
 
 import core.stdc.stdio;
 import memmgr;
+import msetjmp;
 import misc;
 
+enum : ubyte {
+	MODE_NONE,	/// none/other
+	MODE_LATENCY,	/// Latency tester, -L
+	MODE_FUZZER,	/// Fuzzer feature, -F
+}
+
+debug enum DEFAULT_RUNS = 50;	/// Number of times to run the test
+else  enum DEFAULT_RUNS = 50_000;	/// Number of times to run the test
+
 struct settings_s {
+	ubyte cmode; /// Current operation mode, defaults to MODE_NONE
 	/// (Latency) Number of times to loop code
 	/// (Fuzzer) Number of times to generate and execute instructions
 	uint runs; /// Number of runs to perform
 	immutable(char)* filepath; /// File to test upon, if provided
-	uint delta; /// (x86) Moving results from RDTSC penalty
+	/// (x86, AMD64) Moving results from RDTSC penalty
+	uint delta;
+	/// (Latency) No effect. Consider: Random number of times to run
+	/// (Fuzzer) Genereate instructions randomly instead of tunneling
+	ubyte random;
 }
 
-__gshared settings_s Settings = void;
+/// Program settings (CLI)
+__gshared settings_s Settings; // default everything to .init (0)
 
 /**
  * Mingle two 4-byte numbers into an 8-byte number.
@@ -70,7 +88,7 @@ ulong mlem(uint high, uint low) {
 
 unittest {
 	import std.stdio : writefln;
-	import test_latency;
+	import m_latency;
 
 	writefln("mlem: %X", mlem(0x11223344, 0xAABBCCDD));
 	assert(mlem(0x11223344, 0xAABBCCDD) == 0x11223344_AABBCCDD);

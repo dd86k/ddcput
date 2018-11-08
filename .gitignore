@@ -1,7 +1,6 @@
 .dub
 docs.json
 __dummy.html
-docs/
 ddcputester.so
 ddcputester.dylib
 ddcputester.dll
@@ -15,3 +14,5 @@ ddcputester-test-*
 
 *.bin
 *.bak
+
+NOTES

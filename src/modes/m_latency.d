@@ -1,14 +1,11 @@
-module test_latency;
+module m_latency;
 
 import core.stdc.stdio :
 	puts, printf, FILE, fopen, fseek, ftell, fread, SEEK_SET, SEEK_END;
-import ddcput : Settings;
+import ddcput;
 import os_utils;
 import memmgr;
 import misc;
-
-debug enum DEFAULT_RUNS = 50;	/// Number of times to run the test
-else  enum DEFAULT_RUNS = 50_000;	/// Number of times to run the test
 
 // NOTE: *_TEST.size code arrays returns _pointer_ size
 version (X86) {

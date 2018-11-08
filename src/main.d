@@ -1,21 +1,12 @@
 import core.stdc.stdio;
-
 import ddcput;
 import os_utils;
 import seh;
-import test_latency;
-import test_fuzzer;
-import misc;
+import m_latency;
+import m_fuzzer;
+import misc : PLATFORM;
 
 enum APP_VERSION = "0.0.0"; /// Application version
-
-enum : ubyte {
-	MODE_NONE,	/// none/other
-	MODE_LATENCY,	/// Latency tester, -L
-	MODE_FUZZER,	/// Fuzzer feature, -F
-}
-
-__gshared ubyte opt_currentmode; /// Current operation mode, defaults to MODE_NONE
 
 /// Print help
 extern (C) void phelp() {
@@ -43,6 +34,7 @@ extern (C) void pversion() {
 extern (C)
 int main(const int argc, immutable(char)** argv) {
 	import core.stdc.string : strcmp;
+	import core.stdc.stdlib : atoi;
 
 	if (argc <= 1) {
 		phelp; return 0;
@@ -65,11 +57,10 @@ int main(const int argc, immutable(char)** argv) {
 			a = argv[ai];
 			while (*++a != 0) switch (*a) {
 			case 'F':
-				opt_currentmode = MODE_FUZZER;
+				Settings.cmode = MODE_FUZZER;
 				Settings.runs = DEFAULT_RUNS;
 				break;
 			case 'L':
-				//TODO: 
 				if (ai + 1 >= argc) { // temp until -b/-i idk
 					puts("File argument missing for -L");
 					return 2;
@@ -77,9 +68,19 @@ int main(const int argc, immutable(char)** argv) {
 				immutable(char)* fp = argv[ai + 1];
 				const uint r = clicheckpath(fp);
 				if (r) return r;
-				opt_currentmode = MODE_LATENCY;
+				Settings.cmode = MODE_LATENCY;
 				Settings.filepath = fp;
 				Settings.runs = DEFAULT_RUNS;
+				break;
+			case 'R':
+				Settings.random = 1;
+				break;
+			case 'r':
+				if (ai + 1 >= argc) {
+					puts("File argument missing for -r");
+					return 2;
+				}
+
 				break;
 			case 'h', '?': phelp; return 0;
 			case 'v': pversion; return 0;
@@ -92,7 +93,7 @@ int main(const int argc, immutable(char)** argv) {
 
 	seh_init;
 
-	switch (opt_currentmode) {
+	switch (Settings.cmode) {
 	case MODE_LATENCY:
 		start_latency;
 		break;

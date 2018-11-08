@@ -1,8 +1,12 @@
-module test_fuzzer;
+// Fuzzer module
+
+module m_fuzzer;
 
 import ddcput : Settings;
 import memmgr;
 import rand;
+import msetjmp;
+import seh;
 import misc : putchar;
 
 version (X86) {
@@ -14,23 +18,35 @@ version (X86) {
 extern (C):
 
 int start_fuzzer() {
-	import core.stdc.stdio : printf;
+	import core.stdc.stdio : printf, puts;
 	import core.stdc.string : memset;
 
-	rinit;
-
 	mainbuf = __mem_create;
+
+	rinit;
 
 	ubyte* mmp = cast(ubyte*)mainbuf;
 	size_t mmpi = void;
 
 	extern (C) void function() __test = cast(void function())mainbuf;
 
+	jmp_buf jmpl;
+	// SETJMP REMINDER
+	// When first called, setjmp will return 0
+	// When called by longjmp, it will return the value passed (second param)
+	// Flow restarts after this statement when an exception occurs (SEH)
+	const int r = setjmp(&jmpl);
+	jmpcpy = &jmpl;
+
+	if (r) puts(" failed");
+
+	__mem_unprotect(mainbuf);
+
 	while (--Settings.runs > 0) {
 		mmpi = 0;
 		memset(mainbuf, 0, 16);
 
-		const uint size = rnextb & 0xF; // 0-15 seems decent
+		const uint size = rnextb & 0xF; // 0-15
 
 		fgenerate(mainbuf, size);
 
@@ -44,8 +60,6 @@ int start_fuzzer() {
 		__test();
 		__mem_unprotect(mainbuf);
 	}
-
-
 
 	return 0;
 }
@@ -65,7 +79,7 @@ void fgenerate(__membuf_s* buffer, int size) {
 
 	uint i;
 	while (i < size) {
-		// Another time I could directly use rsamplei
+		//TODO: Consider using rsamplei directly
 		*up++ = rnextb;
 		++i;
 	}

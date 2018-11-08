@@ -1,7 +1,12 @@
+// SEH wrapper for Windows
+
 module seh_windows;
 
 import core.stdc.stdio : printf;
+import seh;
 import misc : putchar;
+import msetjmp;
+import ddcput;
 
 extern (C)
 public void seh_init() {
@@ -32,6 +37,11 @@ SetUnhandledExceptionFilter(LPTOP_LEVEL_EXCEPTION_FILTER);
 
 extern (Windows)
 uint _except_handler(_EXCEPTION_POINTERS* e) {
+	if (Settings.cmode == MODE_FUZZER) {
+		sehstatus = 1;
+		longjmp(jmpcpy, 1);
+	}
+
 	version (Win32) {
 		printf(
 			"\n***** EXCEPTION\n" ~
