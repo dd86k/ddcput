@@ -7,13 +7,7 @@ import memmgr;
 import rand;
 import msetjmp;
 import seh;
-import misc : putchar;
-
-version (X86) {
-	enum ubyte OP_RET = 0xC3;
-} else version (X86_64) {
-	enum ubyte OP_RET = 0xC3;
-}
+import misc;
 
 extern (C):
 
