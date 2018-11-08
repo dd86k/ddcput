@@ -117,8 +117,20 @@ int start_latency() {
 
 	__TEST_SETTINGS s = void;
 	s.runs = DEFAULT_RUNS;
-	const float result = core_test(&s);
-	printf("~%f cycles, %d runs\n", result, Settings.runs);
+
+	extern (C) void function(__TEST_SETTINGS*)
+		__test = cast(void function(__TEST_SETTINGS*))mainbuf;
+
+	__test(&s);
+
+	debug {
+		printf("[debug] t1: %u %u\n", s.t1_h, s.t1_l);
+		printf("[debug] t2: %u %u\n", s.t2_h, s.t2_l);
+	}
+
+	float r = (cast(float)s.t2_l - s.t1_l - Settings.delta) / DEFAULT_RUNS;
+	printf("~%f cycles, %d runs\n", r, Settings.runs);
+	//TODO: add time measurement in-between cycles and runs
 
 	return 0;
 }
@@ -145,7 +157,6 @@ uint core_check() {
 /// Initiates essential stuff and calculate delta penalty for measuring
 extern (C)
 void core_init() {
-	debug puts("[debug] rdtsc+mov penalty");
 	__TEST_SETTINGS s;
 	s.runs = DEFAULT_RUNS;
 	version (X86) asm {
@@ -175,16 +186,14 @@ _TEST:
 		mov [RSI + 8], EAX;
 		mov [RSI + 12], EDX;
 	}
-	Settings.delta = cast(uint)((cast(float)s.t2_l - s.t1_l) / DEFAULT_RUNS);
-	debug {
-		printf("[debug] %u %u\n", s.t1_h, s.t1_l);
-		printf("[debug] %u %u\n", s.t2_h, s.t2_l);
-	}
 
-	debug puts("[debug] __mem_create");
+	Settings.delta = cast(uint)((cast(float)s.t2_l - s.t1_l) / DEFAULT_RUNS);
+
 	mainbuf = __mem_create;
 	if (cast(size_t)mainbuf == 0) {
 		puts("Could not initialize mainbuf");
+
+		return 1;
 	}
 	mainbuf.code[0] = 0;	// test write
 }
@@ -206,38 +215,32 @@ int core_load_file(immutable(char)* path) {
 	ubyte* buf = cast(ubyte*)mainbuf;
 
 	// pre-test code
-	debug puts("[debug] pre-test memmove");
 	memmove(buf, PRE_TEST, PRE_TEST_SIZE);
 	buf += PRE_TEST_SIZE;
 
 	// user code
-	debug puts("[debug] open user code");
 	FILE* f = fopen(path, "rb");
 	if (cast(uint)f == 0) return 1;
 
-	debug puts("[debug] fseek end");
 	fseek(f, 0, SEEK_END);
 
-	debug puts("[debug] ftell");
 	const uint fl = ftell(f);	/// File size (length)
 
-	debug printf("[debug] fseek set (from %u Bytes)\n", fl);
+	debug printf("[debug] size:\n", fl);
 	fseek(f, 0, SEEK_SET);
 
-	debug puts("[debug] fread");
 	fread(buf, fl, 1, f);
 	buf += fl;
 
 	// post-test code + patch
-	debug puts("[debug] post-test memmove");
 	memmove(buf, POST_TEST, POST_TEST_SIZE);
 
 	int jmp = -(fl + POST_TEST_OFFSET_JMP); // + DEC + JNE + OP
-	debug printf("[debug] post-test jmp patch (jmp:");
+	debug printf("[debug] jmp: ");
 	*cast(int*)(buf + POST_TEST_JMP) = jmp;
 
 	debug {
-		printf("%d -- %X)\n", jmp, jmp);
+		printf("%d -- %Xh\n", jmp, jmp);
 		ubyte* p = cast(ubyte*)mainbuf;
 
 		uint m = PRE_TEST_SIZE;
@@ -256,50 +259,7 @@ int core_load_file(immutable(char)* path) {
 		putchar('\n');
 	}
 
-	debug puts("[debug] __mem_protect");
 	__mem_protect(mainbuf);
 
 	return 0;
-}
-
-/*version (X86_ANY) extern (C)
-float core_test(__TEST_SETTINGS* s) {
-	version (X86) asm { mov EDI, s; }
-	version (X86_64) asm { mov RDI, s; }
-	asm {
-		mov ESI, DEFAULT_RUNS;
-		rdtsc;
-		mov [EDI], EAX;
-		mov [EDI + 4], EDX;
-_TEST:
-		mov EAX, 0;
-		cpuid;
-
-		dec ESI;
-		jnz _TEST;
-		rdtsc;
-		mov [EDI + 8], EAX;
-		mov [EDI + 12], EDX;
-	}
-	debug {
-		printf("%u %u\n", s.t1_h, s.t1_l);
-		printf("%u %u\n", s.t2_h, s.t2_l);
-	}
-	return (cast(float)s.t2_l - s.t1_l - delta) / DEFAULT_RUNS;
-}*/
-
-float core_test(__TEST_SETTINGS* s) {
-	debug puts("[debug] get __test");
-	extern (C) void function(__TEST_SETTINGS*)
-		__test = cast(void function(__TEST_SETTINGS*))mainbuf;
-
-	debug puts("[debug] call __test");
-	__test(s);
-
-	debug {
-		printf("[debug] %u %u\n", s.t1_h, s.t1_l);
-		printf("[debug] %u %u\n", s.t2_h, s.t2_l);
-	}
-
-	return (cast(float)s.t2_l - s.t1_l - Settings.delta) / DEFAULT_RUNS;
 }
