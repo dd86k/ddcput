@@ -80,7 +80,7 @@ int main(const int argc, immutable(char)** argv) {
 					puts("File argument missing for -r");
 					return 2;
 				}
-
+				
 				break;
 			case 'h', '?': phelp; return 0;
 			case 'v': pversion; return 0;

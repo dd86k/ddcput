@@ -5,6 +5,7 @@ import core.stdc.stdio :
 import ddcput;
 import os_utils;
 import memmgr;
+import stopwatch;
 import misc;
 
 // NOTE: *_TEST.size code arrays returns _pointer_ size
@@ -118,10 +119,17 @@ int start_latency() {
 	__TEST_SETTINGS s = void;
 	s.runs = DEFAULT_RUNS;
 
+	swatch_t sw = void;
+	watch_init(&sw);
+
 	extern (C) void function(__TEST_SETTINGS*)
 		__test = cast(void function(__TEST_SETTINGS*))mainbuf;
 
+	watch_start(&sw);
 	__test(&s);
+	watch_stop(&sw);
+
+	const float ms = watch_ms(&sw);
 
 	debug {
 		printf("[debug] t1: %u %u\n", s.t1_h, s.t1_l);
@@ -129,7 +137,8 @@ int start_latency() {
 	}
 
 	float r = (cast(float)s.t2_l - s.t1_l - Settings.delta) / DEFAULT_RUNS;
-	printf("~%f cycles, %d runs\n", r, Settings.runs);
+	printf("~%.1f cycles, ~%.3f ms (~%f ms each), %d runs\n",
+		r, ms, ms / Settings.runs, Settings.runs);
 	//TODO: add time measurement in-between cycles and runs
 
 	return 0;
@@ -145,7 +154,8 @@ uint core_check() {
 		"and $16, %%edx\n"~
 		"mov %%edx, %%eax\n"~
 		"ret"
-	} else */asm { naked;
+	} else */
+	asm { naked;
 		mov EAX, 1;
 		cpuid;
 		and EDX, 16;	// EDX[4] -- RDTSC
@@ -192,8 +202,6 @@ _TEST:
 	mainbuf = __mem_create;
 	if (cast(size_t)mainbuf == 0) {
 		puts("Could not initialize mainbuf");
-
-		return 1;
 	}
 	mainbuf.code[0] = 0;	// test write
 }
