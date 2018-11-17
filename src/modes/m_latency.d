@@ -117,7 +117,7 @@ int start_latency() {
 	}
 
 	__TEST_SETTINGS s = void;
-	s.runs = DEFAULT_RUNS;
+	s.runs = Settings.runs;
 
 	swatch_t sw = void;
 	watch_init(&sw);
@@ -125,21 +125,20 @@ int start_latency() {
 	extern (C) void function(__TEST_SETTINGS*)
 		__test = cast(void function(__TEST_SETTINGS*))mainbuf;
 
-	watch_start(&sw);
+	//watch_start(&sw);
 	__test(&s);
-	watch_stop(&sw);
+	//watch_stop(&sw);
 
-	const float ms = watch_ms(&sw);
+	const float ms = 0;//watch_ms(&sw);
 
 	debug {
 		printf("[debug] t1: %u %u\n", s.t1_h, s.t1_l);
 		printf("[debug] t2: %u %u\n", s.t2_h, s.t2_l);
 	}
 
-	float r = (cast(float)s.t2_l - s.t1_l - Settings.delta) / DEFAULT_RUNS;
+	float r = (cast(float)s.t2_l - s.t1_l - Settings.delta) / Settings.runs;
 	printf("~%.1f cycles, ~%.3f ms (~%f ms each), %d runs\n",
 		r, ms, ms / Settings.runs, Settings.runs);
-	//TODO: add time measurement in-between cycles and runs
 
 	return 0;
 }

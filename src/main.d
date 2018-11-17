@@ -1,4 +1,6 @@
 import core.stdc.stdio;
+import core.stdc.stdlib : atoi;
+import core.stdc.string : strcmp;
 import ddcput;
 import os_utils;
 import seh;
@@ -33,16 +35,13 @@ extern (C) void pversion() {
 
 extern (C)
 int main(const int argc, immutable(char)** argv) {
-	import core.stdc.string : strcmp;
-	import core.stdc.stdlib : atoi;
-
 	if (argc <= 1) {
 		phelp; return 0;
 	}
 
-	uint ai = argc; /// argument index
+	uint ai; /// argument index
 	immutable(char)* a = void; /// temporary arg pointer
-	while (--ai >= 1) {
+	while (++ai < argc) {
 		if (argv[ai][1] == '-') { // Long arguments
 			a = argv[ai] + 2;
 			if (strcmp(a, "help") == 0) {
@@ -66,8 +65,7 @@ int main(const int argc, immutable(char)** argv) {
 					return 2;
 				}
 				immutable(char)* fp = argv[ai + 1];
-				const uint r = clicheckpath(fp);
-				if (r) return r;
+				if (check_p(fp)) return 2;
 				Settings.cmode = MODE_LATENCY;
 				Settings.filepath = fp;
 				Settings.runs = DEFAULT_RUNS;
@@ -80,7 +78,11 @@ int main(const int argc, immutable(char)** argv) {
 					puts("File argument missing for -r");
 					return 2;
 				}
-				
+				Settings.runs = atoi(argv[ai + 1]);
+				if (Settings.runs == 0) {
+					puts("Failed to set -r");
+					return 3;
+				}
 				break;
 			case 'h', '?': phelp; return 0;
 			case 'v': pversion; return 0;
@@ -97,11 +99,9 @@ int main(const int argc, immutable(char)** argv) {
 	case MODE_LATENCY:
 		start_latency;
 		break;
-	debug {
 	case MODE_FUZZER:
 		start_fuzzer;
 		break;
-	}
 	default: // MODE_NONE
 		puts("Please select an operation mode");
 		return 1;
@@ -110,7 +110,7 @@ int main(const int argc, immutable(char)** argv) {
 	return 0;
 }
 
-int clicheckpath(immutable(char)* path) {
+int check_p(immutable(char)* path) {
 	if (os_pexist(path) == 0) {
 		puts("File not found");
 		return 3;

@@ -17,25 +17,28 @@ debug enum DEFAULT_RUNS = 50;	/// Number of times to run the test
 else  enum DEFAULT_RUNS = 50_000;	/// Number of times to run the test
 
 struct settings_s {
-	ubyte cmode; /// Current operation mode, defaults to MODE_NONE
+	/// Current operation mode, defaults to MODE_NONE
+	ubyte cmode;
 	/// (Latency) Number of times to loop code
 	/// (Fuzzer) Number of times to generate and execute instructions
 	uint runs;
-	immutable(char)* filepath; /// File to test upon, if provided
-	/// (x86, AMD64) Moving results from RDTSC penalty
+	/// (Latency) Load binary test
+	immutable(char)* filepath;
+	/// (Latency) (x86, AMD64) Moving results from RDTSC penalty
 	uint delta;
 	/// (Latency) No effect. Consider: Random number of times to run
 	/// (Fuzzer) Genereate instructions randomly instead of tunneling
 	ubyte random;
-	/// Internal
-	/// If non-zero, skip halting program (bypass SEH)
+	/// (Internal)
+	/// If non-zero, skip halting program (bypass SEH).
+	/// Defaults to 0 (no).
 	ubyte seh_skip;
-	/// Internal
+	/// (Internal)
 	/// Status code affected by SEH
 	ubyte seh_status;
 }
 
-/// Program settings (CLI)
+/// Program settings
 __gshared settings_s Settings; // default everything to .init (0)
 
 /**
