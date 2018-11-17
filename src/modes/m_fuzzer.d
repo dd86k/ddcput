@@ -4,7 +4,7 @@ module m_fuzzer;
 
 import ddcput : Settings;
 import memmgr;
-import rand;
+import netrand;
 import msetjmp;
 import seh;
 import misc;
@@ -24,11 +24,14 @@ int start_fuzzer() {
 
 	extern (C) void function() __test = cast(void function())mainbuf;
 
+	Settings.seh_skip = 1;
+
 	jmp_buf jmpl;
 	// SETJMP REMINDER
 	// When first called, setjmp will return 0
 	// When called by longjmp, it will return the value passed (second param)
 	// Flow restarts after this statement when an exception occurs (SEH)
+	// SEH status will always be non-zero, so do not bother checking it
 	const int r = setjmp(&jmpl);
 	jmpcpy = &jmpl;
 

@@ -2,7 +2,7 @@
  * Random module. Adapted from and based on .NET's Random class.
  */
 
-module rand;
+module netrand;
 
 import os_utils : os_tick;
 

@@ -20,13 +20,19 @@ struct settings_s {
 	ubyte cmode; /// Current operation mode, defaults to MODE_NONE
 	/// (Latency) Number of times to loop code
 	/// (Fuzzer) Number of times to generate and execute instructions
-	uint runs; /// Number of runs to perform
+	uint runs;
 	immutable(char)* filepath; /// File to test upon, if provided
 	/// (x86, AMD64) Moving results from RDTSC penalty
 	uint delta;
 	/// (Latency) No effect. Consider: Random number of times to run
 	/// (Fuzzer) Genereate instructions randomly instead of tunneling
 	ubyte random;
+	/// Internal
+	/// If non-zero, skip halting program (bypass SEH)
+	ubyte seh_skip;
+	/// Internal
+	/// Status code affected by SEH
+	ubyte seh_status;
 }
 
 /// Program settings (CLI)
@@ -44,7 +50,7 @@ __gshared settings_s Settings; // default everything to .init (0)
  *   amd64-Windows-DMD
  *   amd64-Windows-LDC2
  */
-version (0) extern (C)
+version (none) extern (C)
 ulong mlem(uint high, uint low) {
 	version (D_InlineAsm_X86) {
 		pragma(msg, "-- mlem : D_InlineAsm_X86");

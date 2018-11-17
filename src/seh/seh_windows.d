@@ -3,8 +3,6 @@
 module seh_windows;
 
 import core.stdc.stdio : printf;
-import seh;
-import misc : putchar;
 import msetjmp;
 import ddcput;
 
@@ -37,8 +35,8 @@ SetUnhandledExceptionFilter(LPTOP_LEVEL_EXCEPTION_FILTER);
 
 extern (Windows)
 uint _except_handler(_EXCEPTION_POINTERS* e) {
-	if (Settings.cmode == MODE_FUZZER) {
-		sehstatus = 1;
+	if (Settings.seh_skip) {
+		Settings.seh_status = 1;
 		longjmp(jmpcpy, 1);
 	}
 
