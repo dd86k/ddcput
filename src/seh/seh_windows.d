@@ -34,7 +34,7 @@ extern (Windows) LPTOP_LEVEL_EXCEPTION_FILTER
 SetUnhandledExceptionFilter(LPTOP_LEVEL_EXCEPTION_FILTER);
 
 extern (Windows)
-uint _except_handler(_EXCEPTION_POINTERS* e) {
+uint _except_handler(_EXCEPTION_POINTERS *e) {
 	if (Settings.seh_skip) {
 		Settings.seh_status = 1;
 		longjmp(jmpcpy, 1);
@@ -169,11 +169,11 @@ version (Win32) {
 		M128A[8] FloatRegisters;
 
 		version (Win64) {
-			M128A[16] XmmRegisters;
-			BYTE[96]  Reserved4;
+			M128A	[16]XmmRegisters;
+			BYTE	[96]Reserved4;
 		} else {
-			M128A[8]  XmmRegisters;
-			BYTE[224] Reserved4;
+			M128A	[8]XmmRegisters;
+			BYTE	[224]Reserved4;
 		}
 	}
 	/// Win64 _CONTEXT
@@ -243,8 +243,8 @@ version (Win32) {
 		union {
 			_XSAVE_FORMAT FltSave;
 			struct {
-				M128A[2] Header;
-				M128A[8] Legacy;
+				M128A	[2]Header;
+				M128A	[8]Legacy;
 				M128A Xmm0;
 				M128A Xmm1;
 				M128A Xmm2;
@@ -266,7 +266,7 @@ version (Win32) {
 		//
 		// Vector registers.
 		//
-		M128A[26] VectorRegister;
+		M128A	[26]VectorRegister;
 		DWORD64 VectorControl;
 		//
 		// Special debug control registers.

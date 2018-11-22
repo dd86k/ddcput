@@ -23,7 +23,7 @@ struct settings_s {
 	/// (Fuzzer) Number of times to generate and execute instructions
 	uint runs;
 	/// (Latency) Load binary test
-	immutable(char)* filepath;
+	immutable(char) *filepath;
 	/// (Latency) (x86, AMD64) Moving results from RDTSC penalty
 	uint delta;
 	/// (Latency) No effect. Consider: Random number of times to run

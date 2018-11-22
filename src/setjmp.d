@@ -25,7 +25,7 @@ struct __JUMP_BUFFER {
 	uint TryLevel;
 	uint Cookie;
 	uint UnwindFunc;
-	uint[6] UnwindData;
+	uint [6]UnwindData;
 }
 
 public alias __JUMP_BUFFER jmp_buf;
@@ -33,7 +33,7 @@ public alias __JUMP_BUFFER jmp_buf;
 
 version (X86_64) version (Windows) {
 struct _SETJMP_FLOAT128 { align(16):
-	ulong[2] Part;
+	ulong [2]Part;
 }
 
 enum _JBLEN = 16;
@@ -87,7 +87,7 @@ struct _JUMP_BUFFER {
 	uint Sp;
 	uint Pc;
 	uint Fpscr;
-	ulong[8] D; // D8-D15 VFP/NEON regs
+	ulong [8]D; // D8-D15 VFP/NEON regs
 }
 
 alias _JUMP_BUFFER jmp_buf;
@@ -116,7 +116,7 @@ struct _JUMP_BUFFER {
 	uint Fpcr;  // fp control register
 	uint Fpsr;  // fp status register
 
-	double[8] D; // D8-D15 FP regs
+	double [8]D; // D8-D15 FP regs
 }
 
 alias _JUMP_BUFFER jmp_buf;
@@ -124,4 +124,4 @@ alias _JUMP_BUFFER jmp_buf;
 
 //alias jmp_buf[_JBLEN] _JBTYPE;
 
-__gshared jmp_buf* jmpcpy; /// jmp_buf copy for seh
+__gshared jmp_buf *jmpcpy; /// jmp_buf copy for seh

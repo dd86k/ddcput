@@ -19,7 +19,7 @@ int start_fuzzer() {
 
 	rinit;
 
-	ubyte* mmp = cast(ubyte*)mainbuf;
+	ubyte *mmp = cast(ubyte*)mainbuf;
 	size_t mmpi = void;
 
 	extern (C) void function() __test = cast(void function())mainbuf;
@@ -71,7 +71,7 @@ int start_fuzzer() {
  * Returns: Nothing
  * Notes: Windows' RAND_MAX goes up to 0xFFFF
  */
-void fgenerate(__membuf_s* buffer, int size) {
+void fgenerate(__membuf_s *buffer, int size) {
 	ubyte* up = cast(ubyte*)buffer;
 
 	uint i;
@@ -89,12 +89,12 @@ unittest {
 
 	writeln("-- fgenerate 15");
 
-	ubyte[512] b;
+	ubyte [512]b;
 
 	fgenerate(cast(__membuf_s*)b, 15);
 
 	int i = 0;
-	uint* bp = cast(uint*)b;
+	uint *bp = cast(uint*)b;
 	while (bp[i]) {
 		++i;
 		writefln("%08x", bp[i]);

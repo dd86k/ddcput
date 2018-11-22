@@ -34,13 +34,13 @@ extern (C) void pversion() {
 }
 
 extern (C)
-int main(const int argc, immutable(char)** argv) {
+int main(const int argc, immutable(char) **argv) {
 	if (argc <= 1) {
 		phelp; return 0;
 	}
 
 	uint ai; /// argument index
-	immutable(char)* a = void; /// temporary arg pointer
+	immutable(char) *a = void; /// temporary arg pointer
 	while (++ai < argc) {
 		if (argv[ai][1] == '-') { // Long arguments
 			a = argv[ai] + 2;
@@ -64,7 +64,7 @@ int main(const int argc, immutable(char)** argv) {
 					puts("File argument missing for -L");
 					return 2;
 				}
-				immutable(char)* fp = argv[ai + 1];
+				immutable(char) *fp = argv[ai + 1];
 				if (check_p(fp)) return 2;
 				Settings.cmode = MODE_LATENCY;
 				Settings.filepath = fp;
@@ -110,7 +110,7 @@ int main(const int argc, immutable(char)** argv) {
 	return 0;
 }
 
-int check_p(immutable(char)* path) {
+int check_p(immutable(char) *path) {
 	if (os_pexist(path) == 0) {
 		puts("File not found");
 		return 3;

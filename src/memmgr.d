@@ -33,7 +33,7 @@ struct __membuf_s { align(1):
 }
 
 /// Free-to-use global pointer for exec memory block
-__gshared __membuf_s* mainbuf = void;
+__gshared __membuf_s *mainbuf = void;
 
 /**
  * Create a read/write memory block of PAGE_SIZE
@@ -41,7 +41,7 @@ __gshared __membuf_s* mainbuf = void;
  * (Posix) Calls mmap with PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE
  * Returns: A __membuf_s pointer to the memory block
  */
-__membuf_s* __mem_create() {
+__membuf_s *__mem_create() {
 version (Windows) {
 	return cast(__membuf_s*)VirtualAlloc(
 		NULL, __membuf_s.sizeof, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE
@@ -61,7 +61,7 @@ version (Posix) {
  * Params: s = Memory block to protect
  * Notes: While Windows' VirtualAlloc function
  */
-void __mem_protect(__membuf_s* s) {
+void __mem_protect(__membuf_s *s) {
 version (Windows) {
 	uint e = void;
 	VirtualProtect(s, __membuf_s.sizeof, PAGE_EXECUTE_READ, &e);
@@ -77,7 +77,7 @@ version (Posix) {
  * (Posix) Calls mprotect with PROT_READ | PROT_WRITE
  * Params: s = Memory block to unprotect
  */
-void __mem_unprotect(__membuf_s* s) {
+void __mem_unprotect(__membuf_s *s) {
 version (Windows) {
 	uint e = void;
 	VirtualProtect(s, __membuf_s.sizeof, PAGE_READWRITE, &e);
@@ -93,7 +93,7 @@ version (Posix) {
  * (Posix) Calls munmap
  * Params: s = Memory block to free
  */
-void __mem_free(__membuf_s* s) {
+void __mem_free(__membuf_s *s) {
 version (Windows) {
 	VirtualFree(s, 0, MEM_RELEASE);
 }

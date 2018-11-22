@@ -11,7 +11,7 @@ import misc;
 // NOTE: *_TEST.size code arrays returns _pointer_ size
 version (X86) {
 version (Windows) {
-	immutable ubyte* PRE_TEST = [
+	immutable ubyte *PRE_TEST = [
 		// test -- Sets [ecx+4], 1234 and returns
 		//0x8B, 0x4C, 0x24, 0x04, 0xC7, 0x01, 0xD2, 0x04, 0x00, 0x00, 0xC3
 
@@ -21,7 +21,7 @@ version (Windows) {
 	];
 	enum PRE_TEST_SIZE = 22;
 
-	immutable ubyte* POST_TEST = [
+	immutable ubyte *POST_TEST = [
 		// post-x86-windows.asm
 		0x4F, 0x0F, 0x85, 0xF9, 0xFF, 0xFF, 0xFF, 0x0F, 0x31, 0x89, 0x46, 0x08,
 		0x89, 0x56, 0x0C, 0x89, 0xF1, 0x8B, 0x79, 0x14, 0x8B, 0x71, 0x18, 0xC3
@@ -37,14 +37,14 @@ version (linux) {
 } // version linux
 } else version (X86_64) {
 version (Windows) {
-	immutable ubyte* PRE_TEST = [
+	immutable ubyte *PRE_TEST = [
 		// pre-amd64-windows.asm
 		0x48, 0x89, 0x79, 0x14, 0x48, 0x89, 0x71, 0x1C, 0x48, 0x89, 0xCE, 0x48,
 		0x31, 0xFF, 0x8B, 0x7E, 0x10, 0x0F, 0x31, 0x89, 0x06, 0x89, 0x56, 0x04
 	];
 	enum PRE_TEST_SIZE = 24;
 
-	immutable ubyte* POST_TEST = [
+	immutable ubyte *POST_TEST = [
 		// post-amd64-windows.asm
 		0x48, 0xFF, 0xCF, 0x0F, 0x85, 0x00, 0x00, 0x00, 0x00, 0x0F, 0x31, 0x89,
 		0x46, 0x08, 0x89, 0x56, 0x0C, 0x48, 0x89, 0xF1, 0x48, 0x8B, 0x79, 0x14,
@@ -215,18 +215,18 @@ _TEST:
  *   2 on file could not be loaded into memory
  */
 extern (C)
-int core_load_file(immutable(char)* path) {
+int core_load_file(immutable(char) *path) {
 	import core.stdc.string : memmove;
 	import os_utils : os_pexist;
 
-	ubyte* buf = cast(ubyte*)mainbuf;
+	ubyte *buf = cast(ubyte*)mainbuf;
 
 	// pre-test code
 	memmove(buf, PRE_TEST, PRE_TEST_SIZE);
 	buf += PRE_TEST_SIZE;
 
 	// user code
-	FILE* f = fopen(path, "rb");
+	FILE *f = fopen(path, "rb");
 	if (cast(uint)f == 0) return 1;
 
 	fseek(f, 0, SEEK_END);
@@ -248,7 +248,7 @@ int core_load_file(immutable(char)* path) {
 
 	debug {
 		printf("%d -- %Xh\n", jmp, jmp);
-		ubyte* p = cast(ubyte*)mainbuf;
+		ubyte *p = cast(ubyte*)mainbuf;
 
 		uint m = PRE_TEST_SIZE;
 		printf("[debug] PRE [%3d] -- ", m);

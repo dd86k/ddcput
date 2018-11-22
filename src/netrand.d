@@ -13,7 +13,7 @@ private ulong inc = void;
 private ulong state = void;
 private int inext = void;
 private int inextp = void;
-private int[56] seedarr = void;
+private int [56]seedarr = void;
 private int MZ;
 
 extern (C):
@@ -38,7 +38,7 @@ void rinit(uint seed = os_tick) {
 	for (int k = 1; k < 5; ++k) {
 		for (int i = 1; i < 56; ++i) {
 			seedarr[i] -= seedarr[1 + (i + 30) % 55];
-			if (seedarr[i]<0)
+			if (seedarr[i] < 0)
 				seedarr[i] += MBIG;
 		}
 	}
