@@ -41,9 +41,9 @@ builds will run x86 code. A feature to run x86 code in amd64 is planned.
 
 ### REGISTER USAGE
 
-(x86) EDI and ESI registers are reserved.
+(x86) EDI and ESI registers are reserved for internal use.
 
-(amd64) RDI and RSI registers are reserved.
+(amd64) RDI and RSI registers are reserved for internal use.
 
 # X86 PITFALLS
 
@@ -53,9 +53,14 @@ context of the source code and may generate improper code.
 ## OPCODE PREFIX
 
 In x86 ("long compability mode"), NASM might prefix a MOV instruction with an
-OPCODE prefix (66h), even if BITS 32 is specified (not present in BITS 64).
+OPCODE PREFIX (66h), even if BITS 32 is specified (not effects in BITS 64).
 
-For example, a `mov eax, 0` instruction should be encoded like so:
+The OPCODE prefix serves as inverting 16-bit and 32-bit instructions, useful
+for executing 32-bit instructions in 16-bit mode (real-address mode) to
+transition to protected-mode, but when used improperly, may result in serious
+bugs.
+
+For example, a `mov eax, 0` instruction should be encoded like so (x86-32):
 ```
 B8 00 00 00 00
 ```
@@ -65,10 +70,10 @@ However, if the instruction is encoded like so:
 66 B8 00 00 00 00
 ```
 
-The processor will move a WORD (2 bytes) and move the Instruction Pointer
-to the next two bytes: 00 00h, which is encoded like `add [eax], al`, and since
-EAX=0 in this case, it will attempt to write at address 0h and effectively
-segfault (#UD).
+It results in `mov ax, 0`, and the processor will move a WORD (2 bytes)
+instead of a DWORD (4 bytes) and move the Instruction Pointer to the next two
+bytes: 00 00h, which is encoded like `add [eax], al`, and since EAX=0 in this
+case, it will attempt to write at address 0h and effectively segfault (#UD).
 
 # DISCLAIMER
 
