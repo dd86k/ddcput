@@ -6,22 +6,22 @@ import ddcput, os.io, mm, stopwatch, misc;
 
 extern (C):
 
-// NOTE: *_TEST.size code arrays returns _pointer_ size
+// NOTE: *.length does not work
 version (X86) {
 	version (Windows) {
-		immutable ubyte *PRE_TEST = [ // pre-x86-windows.asm
+		immutable ubyte []PRE_TEST = [ // pre-x86-windows.asm
 			0x8B, 0x4C, 0x24, 0x04, 0x89, 0x79, 0x14, 0x89,
 			0x71, 0x18, 0x89, 0xCE, 0x8B, 0x7E, 0x10, 0x0F,
 			0x31, 0x89, 0x06, 0x89, 0x56, 0x04
 		];
-		enum PRE_TEST_SIZE = 22;
+		enum PRE_TEST_SIZE = PRE_TEST.length;
 
-		immutable ubyte *POST_TEST = [ // post-x86-windows.asm
+		immutable ubyte []POST_TEST = [ // post-x86-windows.asm
 			0x4F, 0x0F, 0x85, 0xF9, 0xFF, 0xFF, 0xFF, 0x0F,
 			0x31, 0x89, 0x46, 0x08, 0x89, 0x56, 0x0C, 0x89,
 			0xF1, 0x8B, 0x79, 0x14, 0x8B, 0x71, 0x18, 0xC3
 		];
-		enum POST_TEST_SIZE = 24;
+		enum POST_TEST_SIZE = POST_TEST.length;
 		enum POST_TEST_JMP = 3;	/// Jump patch offset, 0-based, aims at lowest byte
 		enum POST_TEST_OFFSET_JMP = 7;	// DEC+JMP+IMM32
 	} // version Windows
@@ -33,20 +33,20 @@ version (X86) {
 } else
 version (X86_64) {
 	version (Windows) {
-		immutable ubyte *PRE_TEST = [ // pre-amd64-windows.asm
+		immutable ubyte []PRE_TEST = [ // pre-amd64-windows.asm
 			0x48, 0x89, 0x79, 0x14, 0x48, 0x89, 0x71, 0x1C,
 			0x48, 0x89, 0xCE, 0x48, 0x31, 0xFF, 0x8B, 0x7E,
 			0x10, 0x0F, 0x31, 0x89, 0x06, 0x89, 0x56, 0x04
 		];
-		enum PRE_TEST_SIZE = 24;
+		enum PRE_TEST_SIZE = PRE_TEST.length;
 
-		immutable ubyte *POST_TEST = [ // post-amd64-windows.asm
+		immutable ubyte []POST_TEST = [ // post-amd64-windows.asm
 			0x48, 0xFF, 0xCF, 0x0F, 0x85, 0x00, 0x00, 0x00,
 			0x00, 0x0F, 0x31, 0x89, 0x46, 0x08, 0x89, 0x56,
 			0x0C, 0x48, 0x89, 0xF1, 0x48, 0x8B, 0x79, 0x14,
 			0x48, 0x8B, 0x71, 0x18, 0xC3
 		];
-		enum POST_TEST_SIZE = 29;
+		enum POST_TEST_SIZE = POST_TEST.length;
 		enum POST_TEST_JMP = 5;	/// Jump patch offset, 0-based, aims at lowest byte
 		enum POST_TEST_OFFSET_JMP = 9;	// DEC+JMP+IMM32
 	}
@@ -91,7 +91,7 @@ pragma(msg, "__TEST_SETTINGS.t2_l:", __TEST_SETTINGS.t2_l.offsetof);
 pragma(msg, "__TEST_SETTINGS.t2_h:", __TEST_SETTINGS.t2_h.offsetof);
 pragma(msg, "__TEST_SETTINGS.runs:", __TEST_SETTINGS.runs.offsetof);
 
-int start_latency() {
+int l_start() {
 	if (l_check == 0) {
 		puts("ABORT: RDTSC instruction not available");
 		return 1;
@@ -215,7 +215,7 @@ int l_load(const(char) *path) {
 	ubyte *buf = cast(ubyte*)mainpage;
 
 	// pre-test code
-	memmove(buf, PRE_TEST, PRE_TEST_SIZE);
+	memmove(buf, cast(ubyte*)PRE_TEST, PRE_TEST_SIZE);
 	buf += PRE_TEST_SIZE;
 
 	// user code
@@ -233,7 +233,7 @@ int l_load(const(char) *path) {
 	buf += fl;
 
 	// post-test code + patch
-	memmove(buf, POST_TEST, POST_TEST_SIZE);
+	memmove(buf, cast(ubyte*)POST_TEST, POST_TEST_SIZE);
 
 	int jmp = -(fl + POST_TEST_OFFSET_JMP); // + DEC + JNE + OP
 	debug printf("[debug] jmp: ");

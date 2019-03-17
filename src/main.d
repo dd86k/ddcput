@@ -83,11 +83,11 @@ int main(const int argc, const(char) **argv) {
 				}
 				const(char) *fp = argv[ai + 1];
 				if (pcheck(fp)) return 2;
-				Settings.cmode = MODE_LATENCY;
 				Settings.filepath = fp;
+				Settings.cmode = MODE_LATENCY;
 				Settings.runs = DEFAULT_RUNS;
 				break;
-			case 'R':
+			case 'r':
 				Settings.random = 1;
 				break;
 			case 'n':
@@ -97,7 +97,7 @@ int main(const int argc, const(char) **argv) {
 				}
 				Settings.runs = atoi(argv[ai + 1]);
 				if (Settings.runs == 0) {
-					puts("Failed to set -r");
+					puts("Failed to set number of runs (-n)");
 					return 3;
 				}
 				break;
@@ -114,7 +114,7 @@ int main(const int argc, const(char) **argv) {
 
 	switch (Settings.cmode) {
 	case MODE_LATENCY:
-		start_latency;
+		l_start;
 		break;
 	case MODE_FUZZER:
 		start_fuzzer;
