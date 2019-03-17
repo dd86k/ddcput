@@ -1,7 +1,7 @@
 name "ddcput"
-description "Processor tester"
+description "dd's x86/amd64 CPU tester"
 authors "dd86k"
-copyright "Copyright © 2018, dd86k"
+copyright "Copyright © 2018-2019, dd86k"
 license "MIT"
 
 ###################
@@ -9,15 +9,15 @@ license "MIT"
 ###################
 
 buildType "debug-verbose" {
-  targetType "executable"
-  buildOptions "debugMode" "debugInfoC"
-  dflags "-betterC" "-transition=intpromote" "-vgc" "-vtls" "-v"
+	targetType "executable"
+	buildOptions "debugMode" "debugInfoC"
+	dflags "-betterC" "-transition=intpromote" "-vgc" "-vtls" "-v"
 }
 
 buildType "debug" {
-  targetType "executable"
-  buildOptions "debugMode" "debugInfoC"
-  dflags "-betterC" "-transition=intpromote" "-g"
+	targetType "executable"
+	buildOptions "debugMode" "debugInfoC"
+	dflags "-betterC" "-transition=intpromote" "-g"
 }
 
 ###################
@@ -25,19 +25,19 @@ buildType "debug" {
 ###################
 
 buildType "release" {
-  targetType "executable"
-  buildOptions "releaseMode" "optimize"
-  dflags "-betterC" "-transition=intpromote"
+	targetType "executable"
+	buildOptions "releaseMode" "optimize"
+	dflags "-betterC" "-transition=intpromote"
 }
 
 buildType "release-nobounds" {
-  targetType "executable"
-  buildOptions "releaseMode" "noBoundsCheck" "optimize"
-  dflags "-betterC" "-transition=intpromote"
+	targetType "executable"
+	buildOptions "releaseMode" "noBoundsCheck" "optimize"
+	dflags "-betterC" "-transition=intpromote"
 }
 
 buildType "release-inline" {
-  targetType "executable"
-  buildOptions "releaseMode" "noBoundsCheck" "optimize" "inline"
-  dflags "-betterC" "-transition=intpromote"
+	targetType "executable"
+	buildOptions "releaseMode" "noBoundsCheck" "optimize" "inline"
+	dflags "-betterC" "-transition=intpromote"
 }
