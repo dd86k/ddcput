@@ -4,7 +4,7 @@
 
 module netrand;
 
-import os_utils : os_tick;
+import os.io : os_tick;
 
 private enum int MSEED = 161803398;
 private enum int MBIG = int.max;

@@ -1,6 +1,6 @@
 // SEH wrapper for Windows
 
-module seh_windows;
+module seh.windows;
 
 import core.stdc.stdio : printf;
 import msetjmp;

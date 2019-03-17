@@ -2,45 +2,62 @@ import core.stdc.stdio;
 import core.stdc.stdlib : atoi;
 import core.stdc.string : strcmp;
 import ddcput;
-import os_utils;
-import seh;
-import m_latency;
-import m_fuzzer;
+import os.io;
+import seh.seh;
+import modes.latency, modes.fuzzer;
 import misc : PLATFORM;
 
 enum APP_VERSION = "0.0.0"; /// Application version
 
+extern (C):
+
 /// Print help
-extern (C) void phelp() {
+void phelp() {
 	puts(
-		"ddcput, processor testing tool\n"~
-		"  Usage:\n"~
-		"    ddcputester -L [FILE]\n"~
-		"    ddcputester -F\n"~
-		"    ddcputester -v|-h|--version|--help\n"~
-		"\n"~
-		"  (-L) FILE        File containing instructions to measure latency\n"
+	"ddcput, processor testing tool\n"~
+	"Usage:\n"~
+	"\t(Latency) ddcput -L [FILE]\n"~
+	"\t(Fuzzer)  ddcput -F\n"~
+	"\tddcput {-v|-h|--version|--help}\n"~
+	"\n"~
+	"Latency\n"~
+	"\t-L FILE     File containing instructions to measure latency\n"~
+	"\t-n          Number of times to run tests invidually\n"~
+	"\t-i          Run integrated tests\n" //TODO:
+	//"Fuzzer\n"
 	);
 }
 
 /// Print version
-extern (C) void pversion() {
+void pversion() {
 	printf(
-		"ddcput-"~PLATFORM~" v"~APP_VERSION~"  ("~__TIMESTAMP__~")\n"~
-		"License: MIT <https://opensource.org/licenses/MIT>\n"~
-		"Compiler: "~__VENDOR__~" v%u\n",
-		__VERSION__
+	"ddcput-"~PLATFORM~" v"~APP_VERSION~"  ("~__TIMESTAMP__~")\n"~
+	"License: MIT <https://opensource.org/licenses/MIT>\n"~
+	"Home: https://git.dd86k.space/dd86k/ddcput\n"~
+	"Compiler: "~__VENDOR__~" v%u\n",
+	__VERSION__
 	);
 }
 
-extern (C)
-int main(const int argc, immutable(char) **argv) {
+int pcheck(const(char) *path) {
+	if (os_pexist(path) == 0) {
+		puts("File not found");
+		return 3;
+	}
+	if (os_pisdir(path)) {
+		puts("Path is directory");
+		return 4;
+	}
+	return 0;
+}
+
+int main(const int argc, const(char) **argv) {
 	if (argc <= 1) {
 		phelp; return 0;
 	}
 
 	uint ai; /// argument index
-	immutable(char) *a = void; /// temporary arg pointer
+	const(char) *a = void; /// temporary arg pointer
 	while (++ai < argc) {
 		if (argv[ai][1] == '-') { // Long arguments
 			a = argv[ai] + 2;
@@ -60,12 +77,12 @@ int main(const int argc, immutable(char) **argv) {
 				Settings.runs = DEFAULT_RUNS;
 				break;
 			case 'L':
-				if (ai + 1 >= argc) { // temp until -b/-i idk
+				if (ai + 1 >= argc) {
 					puts("File argument missing for -L");
 					return 2;
 				}
-				immutable(char) *fp = argv[ai + 1];
-				if (check_p(fp)) return 2;
+				const(char) *fp = argv[ai + 1];
+				if (pcheck(fp)) return 2;
 				Settings.cmode = MODE_LATENCY;
 				Settings.filepath = fp;
 				Settings.runs = DEFAULT_RUNS;
@@ -73,7 +90,7 @@ int main(const int argc, immutable(char) **argv) {
 			case 'R':
 				Settings.random = 1;
 				break;
-			case 'r':
+			case 'n':
 				if (ai + 1 >= argc) {
 					puts("File argument missing for -r");
 					return 2;
@@ -107,17 +124,5 @@ int main(const int argc, immutable(char) **argv) {
 		return 1;
 	}
 
-	return 0;
-}
-
-int check_p(immutable(char) *path) {
-	if (os_pexist(path) == 0) {
-		puts("File not found");
-		return 3;
-	}
-	if (os_pisdir(path)) {
-		puts("Path is directory");
-		return 4;
-	}
 	return 0;
 }

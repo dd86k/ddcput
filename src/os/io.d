@@ -1,11 +1,12 @@
-/*
- * os_utils.d : Basic OS utilities
+/**
+ * Basic OS utilities
  *
  * Includes OS utilities, such as changing/getting the current working
  * directory, setting/getting file attributes, directory walkers, etc.
  */
+module os.io;
 
-module os_utils;
+extern (C):
 
 struct OSTime {
 	ubyte hour, minute, second, millisecond;
@@ -20,7 +21,6 @@ struct OSDate {
  * Params: ost = OSTime structure pointer
  * Returns: 0 on success, non-zero on error when applicable
  */
-extern (C)
 int os_time(OSTime *ost) {
 	version (Windows) {
 		import core.sys.windows.windows : SYSTEMTIME, GetLocalTime;
@@ -45,9 +45,8 @@ int os_time(OSTime *ost) {
 		ost.minute = cast(ubyte)s.tm_min;
 		ost.second = cast(ubyte)s.tm_sec;
 		ost.millisecond = cast(ubyte)tv.tv_usec;
-	} else {
+	} else
 		static assert(0, "Implement os_time");
-	}
 	return 0;
 }
 
@@ -56,7 +55,6 @@ int os_time(OSTime *ost) {
  * Params: osd = OSDate structure pointer
  * Returns: 0 on success
  */
-extern (C)
 int os_date(OSDate *osd) {
 	version (Windows) {
 		import core.sys.windows.winbase : SYSTEMTIME, GetLocalTime;
@@ -67,7 +65,8 @@ int os_date(OSDate *osd) {
 		osd.month = cast(ubyte)s.wMonth;
 		osd.day = cast(ubyte)s.wDay;
 		osd.weekday = cast(ubyte)s.wDayOfWeek;
-	} else version (Posix) {
+	} else
+	version (Posix) {
 		import core.sys.posix.time : time_t, time, localtime, tm;
 		time_t r = void; time(&r);
 		const tm *s = localtime(&r);
@@ -76,9 +75,8 @@ int os_date(OSDate *osd) {
 		osd.month = cast(ubyte)(s.tm_mon + 1);
 		osd.day = cast(ubyte)s.tm_mday;
 		osd.weekday = cast(ubyte)s.tm_wday;
-	} else {
+	} else
 		static assert(0, "Implement os_date");
-	}
 	return 0;
 }
 
@@ -87,12 +85,11 @@ int os_date(OSDate *osd) {
  * Params: p = Path
  * Returns: 0 on success
  */
-extern (C)
 int os_scwd(char *p) {
 	version (Windows) {
 		import core.sys.windows.winbase : SetCurrentDirectoryA;
 		return SetCurrentDirectoryA(p) != 0;
-	}
+	} else
 	version (Posix) {
 		import core.sys.posix.unistd : chdir;
 		return chdir(p) == 0;
@@ -104,7 +101,6 @@ int os_scwd(char *p) {
  * Params: p = string buffer
  * Returns: non-zero on success
  */
-extern (C)
 int os_gcwd(char *p) {
 	version (Windows) {
 		import core.sys.windows.winbase : GetCurrentDirectoryA;
@@ -122,12 +118,11 @@ int os_gcwd(char *p) {
  * Params: p = Path
  * Returns: Non-zero if exists
  */
-extern (C)
-int os_pexist(immutable(char) *p) {
+int os_pexist(const(char) *p) {
 	version (Windows) {
 		import core.sys.windows.windows : GetFileAttributesA;
 		return GetFileAttributesA(p) != 0xFFFF_FFFF;
-	}
+	} else
 	version (Posix) {
 		import core.sys.posix.sys.stat : stat_t, stat;
 		stat_t s = void;
@@ -140,13 +135,12 @@ int os_pexist(immutable(char) *p) {
  * Params: p = Path to check
  * Returns: Non-zero if directory
  */
-extern (C)
-int os_pisdir(immutable(char) *p) {
+int os_pisdir(const(char) *p) {
 	version (Windows) {
 		import core.sys.windows.windows :
 			GetFileAttributesA, FILE_ATTRIBUTE_DIRECTORY;
 		return GetFileAttributesA(p) == FILE_ATTRIBUTE_DIRECTORY;
-	}
+	} else
 	version (Posix) {
 		import core.sys.posix.sys.stat : stat_t, stat, S_IFDIR;
 		stat_t s = void;
@@ -156,8 +150,8 @@ int os_pisdir(immutable(char) *p) {
 }
 
 int os_tick() {
-version (Windows) {
-	import core.sys.windows.windows : GetTickCount;
-	return GetTickCount;
-}
+	version (Windows) {
+		import core.sys.windows.windows : GetTickCount;
+		return GetTickCount;
+	}
 }

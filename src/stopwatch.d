@@ -1,7 +1,7 @@
 module stopwatch;
 
 version (Windows) {
-import core.sys.windows.windows;
+	import core.sys.windows.windows;
 }
 
 extern (C):

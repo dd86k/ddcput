@@ -1,18 +1,21 @@
-module memmgr; // Memory manager
+/**
+ * Memory Manager
+ */
+module mm;
 
 import core.stdc.stdio;
 
 version (Windows) {
-import core.sys.windows.winbase :
-	VirtualAlloc, VirtualProtect, VirtualFree, VirtualLock;
-import core.sys.windows.winnt :
-	MEM_RESERVE, MEM_COMMIT, MEM_RELEASE,
-	PAGE_READWRITE, PAGE_EXECUTE, PAGE_EXECUTE_READ, PAGE_EXECUTE_READWRITE;
+	import core.sys.windows.winbase :
+		VirtualAlloc, VirtualProtect, VirtualFree, VirtualLock;
+	import core.sys.windows.winnt :
+		MEM_RESERVE, MEM_COMMIT, MEM_RELEASE,
+		PAGE_READWRITE, PAGE_EXECUTE, PAGE_EXECUTE_READ, PAGE_EXECUTE_READWRITE;
 }
 version (Posix) {
-import core.sys.posix.sys.mman :
-	mmap, mprotect, munmap,
-	PROT_READ, PROT_WRITE, PROT_EXEC, MAP_ANON, MAP_PRIVATE;
+	import core.sys.posix.sys.mman :
+		mmap, mprotect, munmap,
+		PROT_READ, PROT_WRITE, PROT_EXEC, MAP_ANON, MAP_PRIVATE;
 }
 
 extern (C):
@@ -24,16 +27,17 @@ extern (C):
 // 
 //TODO: Get page sizes
 enum PAGE_SIZE = 4096u;	/// Minimum page size
-enum NULL = cast(void*)0; /// NULL alias to (void*)0
+enum NULL = cast(void*)0; /// Alias to (void*)0
 
 /// Memory block
-struct __membuf_s { align(1):
+struct page_t { align(1):
 	ubyte[PAGE_SIZE - size_t.sizeof] code; /// Memory block data
 	size_t size; /// Memory block size, should be PAGE_SIZE
 }
+static assert(page_t.sizeof == PAGE_SIZE, "page_t.sizeof != PAGE_SIZE");
 
 /// Free-to-use global pointer for exec memory block
-__gshared __membuf_s *mainbuf = void;
+__gshared page_t *mainpage = void;
 
 /**
  * Create a read/write memory block of PAGE_SIZE
@@ -41,17 +45,15 @@ __gshared __membuf_s *mainbuf = void;
  * (Posix) Calls mmap with PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE
  * Returns: A __membuf_s pointer to the memory block
  */
-__membuf_s *__mem_create() {
-version (Windows) {
-	return cast(__membuf_s*)VirtualAlloc(
-		NULL, __membuf_s.sizeof, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE
+page_t *mm_create() {
+version (Windows)
+	return cast(page_t*)VirtualAlloc(
+		NULL, page_t.sizeof, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE
 	);
-}
-version (Posix) {
-	return cast(__membuf_s*)mmap(
-		NULL, __membuf_s.sizeof, PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE, -1, 0
+version (Posix)
+	return cast(page_t*)mmap(
+		NULL, page_t.sizeof, PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE, -1, 0
 	);
-}
 }
 
 /**
@@ -59,16 +61,14 @@ version (Posix) {
  * (Windows) Calls VirtualProtect with PAGE_EXECUTE_READ
  * (Posix) Calls mprotect with PROT_READ | PROT_EXEC
  * Params: s = Memory block to protect
- * Notes: While Windows' VirtualAlloc function
  */
-void __mem_protect(__membuf_s *s) {
+void mm_protect(page_t *s) {
 version (Windows) {
 	uint e = void;
-	VirtualProtect(s, __membuf_s.sizeof, PAGE_EXECUTE_READ, &e);
+	VirtualProtect(s, page_t.sizeof, PAGE_EXECUTE_READ, &e);
 }
-version (Posix) {
-	mprotect(s, __membuf_s.sizeof, PROT_READ | PROT_EXEC);
-}
+version (Posix)
+	mprotect(s, page_t.sizeof, PROT_READ | PROT_EXEC);
 }
 
 /**
@@ -77,14 +77,13 @@ version (Posix) {
  * (Posix) Calls mprotect with PROT_READ | PROT_WRITE
  * Params: s = Memory block to unprotect
  */
-void __mem_unprotect(__membuf_s *s) {
+void mm_unprotect(page_t *s) {
 version (Windows) {
 	uint e = void;
-	VirtualProtect(s, __membuf_s.sizeof, PAGE_READWRITE, &e);
+	VirtualProtect(s, page_t.sizeof, PAGE_READWRITE, &e);
 }
-version (Posix) {
-	mprotect(s, __membuf_s.sizeof, PROT_READ | PROT_WRITE);
-}
+version (Posix)
+	mprotect(s, page_t.sizeof, PROT_READ | PROT_WRITE);
 }
 
 /**
@@ -93,13 +92,10 @@ version (Posix) {
  * (Posix) Calls munmap
  * Params: s = Memory block to free
  */
-void __mem_free(__membuf_s *s) {
+void mm_free(page_t *s) {
 version (Windows) {
 	VirtualFree(s, 0, MEM_RELEASE);
 }
-version (Posix) {
+version (Posix)
 	munmap(s, PAGE_SIZE);
 }
-}
-
-static assert(__membuf_s.sizeof == PAGE_SIZE, "Buffer size is not equal to PAGE_SIZE");

@@ -1,12 +1,12 @@
 // Fuzzer module
 
-module m_fuzzer;
+module modes.fuzzer;
 
 import ddcput : Settings;
-import memmgr;
+import mm;
 import netrand;
 import msetjmp;
-import seh;
+import seh.seh;
 import misc;
 
 extern (C):
@@ -15,14 +15,14 @@ int start_fuzzer() {
 	import core.stdc.stdio : printf, puts;
 	import core.stdc.string : memset;
 
-	mainbuf = __mem_create;
+	mainpage = mm_create;
 
 	rinit;
 
-	ubyte *mmp = cast(ubyte*)mainbuf;
+	ubyte *mmp = cast(ubyte*)mainpage;
 	size_t mmpi = void;
 
-	extern (C) void function() __test = cast(void function())mainbuf;
+	extern (C) void function() __test = cast(void function())mainpage;
 
 	Settings.seh_skip = 1;
 
@@ -37,15 +37,15 @@ int start_fuzzer() {
 
 	if (r) puts(" failed");
 
-	__mem_unprotect(mainbuf);
+	mm_unprotect(mainpage);
 
 	while (--Settings.runs > 0) {
 		mmpi = 0;
-		memset(mainbuf, 0, 16);
+		memset(mainpage, 0, 16);
 
 		const uint size = rnextb & 0xF; // 0-15
 
-		fgenerate(mainbuf, size);
+		fgenerate(mainpage, size);
 
 		while (mmp[mmpi]) {
 			printf("%02X ", mmp[mmpi]);
@@ -53,9 +53,9 @@ int start_fuzzer() {
 		}
 		putchar('\n');
 
-		__mem_protect(mainbuf);
+		mm_protect(mainpage);
 		__test();
-		__mem_unprotect(mainbuf);
+		mm_unprotect(mainpage);
 	}
 
 	return 0;
@@ -71,7 +71,7 @@ int start_fuzzer() {
  * Returns: Nothing
  * Notes: Windows' RAND_MAX goes up to 0xFFFF
  */
-void fgenerate(__membuf_s *buffer, int size) {
+void fgenerate(page_t *buffer, int size) {
 	ubyte* up = cast(ubyte*)buffer;
 
 	uint i;
@@ -91,7 +91,7 @@ unittest {
 
 	ubyte [512]b;
 
-	fgenerate(cast(__membuf_s*)b, 15);
+	fgenerate(cast(page_t*)b, 15);
 
 	int i = 0;
 	uint *bp = cast(uint*)b;
@@ -102,7 +102,7 @@ unittest {
 
 	writeln("-- fgenerate 16");
 
-	fgenerate(cast(__membuf_s*)b, 16);
+	fgenerate(cast(page_t*)b, 16);
 
 	i = 0;
 	while (bp[i]) {

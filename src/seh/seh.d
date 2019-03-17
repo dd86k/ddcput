@@ -1,10 +1,8 @@
-module seh;
-
-public:
+module seh.seh;
 
 version (Windows) {
-	public import seh_windows : seh_init;
+	public import seh.windows;
 }
 version (Posix) {
-	//public import seh_posix : seh_init;
+	//public import seh.posix;
 }

@@ -3,7 +3,7 @@
 module ddcput;
 
 import core.stdc.stdio;
-import memmgr;
+import mm;
 import msetjmp;
 import misc;
 
@@ -13,8 +13,7 @@ enum : ubyte {
 	MODE_FUZZER,	/// Fuzzer feature, -F
 }
 
-debug enum DEFAULT_RUNS = 50;	/// Number of times to run the test
-else  enum DEFAULT_RUNS = 50_000;	/// Number of times to run the test
+enum DEFAULT_RUNS = 50_000;	/// (Latency) Number of times to run the test by default
 
 struct settings_s {
 	/// Current operation mode, defaults to MODE_NONE
@@ -23,7 +22,7 @@ struct settings_s {
 	/// (Fuzzer) Number of times to generate and execute instructions
 	uint runs;
 	/// (Latency) Load binary test
-	immutable(char) *filepath;
+	const(char) *filepath;
 	/// (Latency) (x86, AMD64) Moving results from RDTSC penalty
 	uint delta;
 	/// (Latency) No effect. Consider: Random number of times to run
@@ -91,9 +90,9 @@ ulong mlem(uint high, uint low) {
 	}
 }
 
-/*
- * Unitests
- */
+//
+// Unitests
+//
 
 unittest {
 	import std.stdio : writefln;
