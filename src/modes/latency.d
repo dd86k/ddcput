@@ -85,11 +85,15 @@ struct __TEST_SETTINGS { align(1):
 	}
 }
 
-pragma(msg, "__TEST_SETTINGS.t1_l:", __TEST_SETTINGS.t1_l.offsetof);
-pragma(msg, "__TEST_SETTINGS.t1_h:", __TEST_SETTINGS.t1_h.offsetof);
-pragma(msg, "__TEST_SETTINGS.t2_l:", __TEST_SETTINGS.t2_l.offsetof);
-pragma(msg, "__TEST_SETTINGS.t2_h:", __TEST_SETTINGS.t2_h.offsetof);
-pragma(msg, "__TEST_SETTINGS.runs:", __TEST_SETTINGS.runs.offsetof);
+debug {
+	static assert(__TEST_SETTINGS.t1.offsetof == 0);
+	static assert(__TEST_SETTINGS.t1_l.offsetof == 0);
+	static assert(__TEST_SETTINGS.t1_h.offsetof == 4);
+	static assert(__TEST_SETTINGS.t2.offsetof == 8);
+	static assert(__TEST_SETTINGS.t2_l.offsetof == 8);
+	static assert(__TEST_SETTINGS.t2_h.offsetof == 12);
+	static assert(__TEST_SETTINGS.runs.offsetof == 16);
+}
 
 int l_start() {
 	if (l_check == 0) {
