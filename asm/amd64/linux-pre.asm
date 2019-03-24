@@ -1,8 +1,8 @@
 BITS 64
 
-mov [rcx + 20], rdi	; RCX already set, save RDI and RSI
-mov [rcx + 28], rsi
-mov rsi, rcx
+mov [rdi + 20], rdi	; Save RSI and RDI
+mov [rdi + 28], rsi
+mov rsi, rdi
 xor rdi, rdi
 mov rdi, [rsi + 16]	; __TEST_SETTINGS.runs
 rdtsc

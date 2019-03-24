@@ -2,7 +2,7 @@ BITS 64
 
 pre_test:
 dec rdi
-jnz pre_test	; translates to a QWORD
+jnz near pre_test
 ; -- Test finished at this point --
 rdtsc
 mov [rsi + 8], eax	; __TEST_SETTINGS.ts2_l

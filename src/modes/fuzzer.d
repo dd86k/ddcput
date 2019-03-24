@@ -3,9 +3,9 @@
 module modes.fuzzer;
 
 import ddcput : Settings;
+import os.setjmp;
 import mm;
 import netrand;
-import msetjmp;
 import seh.seh;
 import misc;
 

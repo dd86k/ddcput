@@ -153,5 +153,12 @@ int os_tick() {
 	version (Windows) {
 		import core.sys.windows.windows : GetTickCount;
 		return GetTickCount;
+	} else
+	version (Posix) {
+		import core.sys.posix.time;
+		timespec now = void;
+		if (clock_gettime(CLOCK_MONOTONIC, &now))
+			return 0;
+		return cast(int)((now.tv_sec * 1000) + (now.tv_nsec / 1000000));
 	}
 }

@@ -1,12 +1,15 @@
-// SEH wrapper for Windows
-
+/**
+ * SEH wrapper for Windows
+ */
 module seh.windows;
 
 import core.stdc.stdio : printf;
-import msetjmp;
+import os.setjmp;
 import ddcput;
 
-extern (C)
+version (Windows):
+extern (C):
+
 public void seh_init() {
 	SetUnhandledExceptionFilter(cast(void*)&_except_handler);
 }
@@ -25,10 +28,9 @@ alias ushort WORD;
 alias ulong DWORD64;
 alias void* PVOID;
 alias ubyte BYTE;
+alias void* LPTOP_LEVEL_EXCEPTION_FILTER;
 alias _CONTEXT* PCONTEXT;
 alias _EXCEPTION_RECORD* PEXCEPTION_RECORD;
-
-alias void* LPTOP_LEVEL_EXCEPTION_FILTER;
 
 extern (Windows) LPTOP_LEVEL_EXCEPTION_FILTER
 SetUnhandledExceptionFilter(LPTOP_LEVEL_EXCEPTION_FILTER);
@@ -82,6 +84,7 @@ uint _except_handler(_EXCEPTION_POINTERS *e) {
 	return EXCEPTION_EXECUTE_HANDLER;
 }
 
+// https://docs.microsoft.com/en-us/windows/desktop/api/WinNT/ns-winnt-_exception_record
 struct _EXCEPTION_POINTERS {
 	PEXCEPTION_RECORD ExceptionRecord;
 	PCONTEXT          ContextRecord;

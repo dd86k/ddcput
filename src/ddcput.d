@@ -3,8 +3,8 @@
 module ddcput;
 
 import core.stdc.stdio;
+import os.setjmp;
 import mm;
-import msetjmp;
 import misc;
 
 enum : ubyte {

@@ -97,7 +97,7 @@ int main(const int argc, const(char) **argv) {
 				}
 				Settings.runs = atoi(argv[ai + 1]);
 				if (Settings.runs == 0) {
-					puts("Failed to set number of runs (-n)");
+					puts("Run times must be higher than 0 (-n)");
 					return 3;
 				}
 				break;

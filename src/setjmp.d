@@ -11,7 +11,7 @@
  * sysdeps/x86_64/jmpbuf-offsets.h
  * sysdeps/aarch64/jmpbuf-offsets.h
  */
-module msetjmp;
+module os.setjmp;
 
 extern (C):
 

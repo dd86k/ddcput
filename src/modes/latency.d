@@ -23,9 +23,8 @@ version (X86) {
 		];
 		enum POST_TEST_SIZE = POST_TEST.length;
 		enum POST_TEST_JMP = 3;	/// Jump patch offset, 0-based, aims at lowest byte
-		enum POST_TEST_OFFSET_JMP = 7;	// DEC+JMP+IMM32
-	} // version Windows
-
+		enum POST_TEST_JMP_SIZE = 7;	// DEC+JMP+IMM32
+	} else // version Windows
 	version (linux) {
 		static assert(0, "x86-linux PRE_TEST code needed");
 		static assert(0, "x86-linux POST_TEST code needed");
@@ -33,14 +32,14 @@ version (X86) {
 } else
 version (X86_64) {
 	version (Windows) {
-		immutable ubyte []PRE_TEST = [ // pre-amd64-windows.asm
+		immutable ubyte []PRE_TEST = [
 			0x48, 0x89, 0x79, 0x14, 0x48, 0x89, 0x71, 0x1C,
 			0x48, 0x89, 0xCE, 0x48, 0x31, 0xFF, 0x8B, 0x7E,
 			0x10, 0x0F, 0x31, 0x89, 0x06, 0x89, 0x56, 0x04
 		];
 		enum PRE_TEST_SIZE = PRE_TEST.length;
 
-		immutable ubyte []POST_TEST = [ // post-amd64-windows.asm
+		immutable ubyte []POST_TEST = [
 			0x48, 0xFF, 0xCF, 0x0F, 0x85, 0x00, 0x00, 0x00,
 			0x00, 0x0F, 0x31, 0x89, 0x46, 0x08, 0x89, 0x56,
 			0x0C, 0x48, 0x89, 0xF1, 0x48, 0x8B, 0x79, 0x14,
@@ -48,12 +47,25 @@ version (X86_64) {
 		];
 		enum POST_TEST_SIZE = POST_TEST.length;
 		enum POST_TEST_JMP = 5;	/// Jump patch offset, 0-based, aims at lowest byte
-		enum POST_TEST_OFFSET_JMP = 9;	// DEC+JMP+IMM32
-	}
-
+		enum POST_TEST_JMP_SIZE = 9;	// DEC+JMP+IMM32
+	} else
 	version (linux) {
-		static assert(0, "amd64-linux PRE_TEST code needed");
-		static assert(0, "amd64-linux POST_TEST code needed");
+		immutable ubyte []PRE_TEST = [
+			0x48, 0x89, 0x7F, 0x14, 0x48, 0x89, 0x77, 0x1C,
+			0x48, 0x89, 0xFE, 0x48, 0x31, 0xFF, 0x48, 0x8B,
+			0x7E, 0x10, 0x0F, 0x31, 0x89, 0x06, 0x89, 0x56,
+			0x04
+		];
+		enum PRE_TEST_SIZE = PRE_TEST.length;
+
+		immutable ubyte []POST_TEST = [
+			0x48, 0xFF, 0xCF, 0x0F, 0x85, 0xFB, 0x0F, 0x31,
+			0x89, 0x46, 0x08, 0x89, 0x56, 0x0C, 0x48, 0x89,
+			0xF7, 0x48, 0x8B, 0x77, 0x18, 0xC3
+		];
+		enum POST_TEST_SIZE = POST_TEST.length;
+		enum POST_TEST_JMP = 5;	/// Jump patch offset, 0-based, aims at lowest byte
+		enum POST_TEST_JMP_SIZE = 9;	// DEC+JMP+IMM32
 	}
 }
 
@@ -228,9 +240,9 @@ int l_load(const(char) *path) {
 
 	fseek(f, 0, SEEK_END);
 
-	const uint fl = ftell(f);	/// File size (length)
+	const uint fl = cast(uint)ftell(f);	/// File size (length)
 
-	debug printf("[debug] size:\n", fl);
+	debug printf("[debug] size: %u\n", fl);
 	fseek(f, 0, SEEK_SET);
 
 	fread(buf, fl, 1, f);
@@ -239,7 +251,7 @@ int l_load(const(char) *path) {
 	// post-test code + patch
 	memmove(buf, cast(ubyte*)POST_TEST, POST_TEST_SIZE);
 
-	int jmp = -(fl + POST_TEST_OFFSET_JMP); // + DEC + JNE + OP
+	int jmp = -(fl + POST_TEST_JMP_SIZE); // + DEC + JNE + OP
 	debug printf("[debug] jmp: ");
 	*cast(int*)(buf + POST_TEST_JMP) = jmp;
 
