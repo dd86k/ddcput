@@ -11,7 +11,7 @@ ddcput is a micro-processor testing utility that can:
 | Windows-amd64 | ✔️ (6.0+) | 🔄 ongoing |
 | macOS-amd64 | Planned [1] | Planned [1] |
 | Linux-x86 | Planned | Planned |
-| Linux-amd64 | Planned | Planned |
+| Linux-amd64 | ✔️ | Planned |
 | FreeBSD-x86 | Planned | Planned |
 | FreeBSD-amd64 | Planned | Planned |
 | OpenBSD-x86 | Planned | Planned |
@@ -24,7 +24,8 @@ ddcput is a micro-processor testing utility that can:
 
 ### NOTES
 
-(x86/amd64) This tool is NOT supported in real and vm8086 modes.
+(x86/amd64) This tool is NOT supported in any 16-bit modes, such as real and
+vm8086 modes.
 
 # USAGE
 
@@ -74,6 +75,11 @@ It results in `mov ax, 0`, and the processor will move a WORD (2 bytes)
 instead of a DWORD (4 bytes) and move the Instruction Pointer to the next two
 bytes: 00 00h, which is encoded like `add [eax], al`, and since EAX=0 in this
 case, it will attempt to write at address 0h and effectively segfault (#UD).
+
+# VIRTUALIZATION NOTES
+
+Please note that some emulators and hypervisors, such as Oracle VirtualBox may
+improperly emulate the RDTSC instruction.
 
 # DISCLAIMER
 
