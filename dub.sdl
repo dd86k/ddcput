@@ -11,13 +11,13 @@ license "MIT"
 buildType "debug-verbose" {
 	targetType "executable"
 	buildOptions "debugMode" "debugInfoC"
-	dflags "-betterC" "-transition=intpromote" "-vgc" "-vtls" "-v"
+	dflags "-betterC" "-vgc" "-vtls" "-v"
 }
 
 buildType "debug" {
 	targetType "executable"
 	buildOptions "debugMode" "debugInfoC"
-	dflags "-betterC" "-transition=intpromote" "-g"
+	dflags "-betterC"
 }
 
 ###################
@@ -27,17 +27,17 @@ buildType "debug" {
 buildType "release" {
 	targetType "executable"
 	buildOptions "releaseMode" "optimize"
-	dflags "-betterC" "-transition=intpromote"
+	dflags "-betterC"
 }
 
 buildType "release-nobounds" {
 	targetType "executable"
 	buildOptions "releaseMode" "noBoundsCheck" "optimize"
-	dflags "-betterC" "-transition=intpromote"
+	dflags "-betterC"
 }
 
 buildType "release-inline" {
 	targetType "executable"
 	buildOptions "releaseMode" "noBoundsCheck" "optimize" "inline"
-	dflags "-betterC" "-transition=intpromote"
+	dflags "-betterC"
 }

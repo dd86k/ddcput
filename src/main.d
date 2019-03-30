@@ -30,12 +30,13 @@ void phelp() {
 
 /// Print version
 void pversion() {
+	import d = std.compiler : version_major, version_minor;
 	printf(
 	"ddcput-"~PLATFORM~" v"~APP_VERSION~"  ("~__TIMESTAMP__~")\n"~
 	"License: MIT <https://opensource.org/licenses/MIT>\n"~
 	"Home: https://git.dd86k.space/dd86k/ddcput\n"~
-	"Compiler: "~__VENDOR__~" v%u\n",
-	__VERSION__
+	"Compiler: "~__VENDOR__~" v%u.%u\n",
+	d.version_major, d.version_minor
 	);
 }
 

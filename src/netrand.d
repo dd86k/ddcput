@@ -9,12 +9,12 @@ import os.io : os_tick;
 private enum int MSEED = 161803398;
 private enum int MBIG = int.max;
 
-private ulong inc = void;
-private ulong state = void;
-private int inext = void;
-private int inextp = void;
-private int [56]seedarr = void;
-private int MZ;
+private __gshared ulong inc = void;
+private __gshared ulong state = void;
+private __gshared int inext = void;
+private __gshared int inextp = void;
+private __gshared int [56]seedarr = void;
+private __gshared int MZ;
 
 extern (C):
 

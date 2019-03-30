@@ -22,8 +22,8 @@ version (X86) {
 			0xF1, 0x8B, 0x79, 0x14, 0x8B, 0x71, 0x18, 0xC3
 		];
 		enum POST_TEST_SIZE = POST_TEST.length;
-		enum POST_TEST_JMP = 3;	/// Jump patch offset, 0-based, aims at lowest byte
-		enum POST_TEST_JMP_SIZE = 7;	// DEC+JMP+IMM32
+		enum POST_TEST_JMP_LOC = 3;	/// Jump patch offset, 0-based, aims at lowest byte
+		enum POST_TEST_OFFSET = 7;	// DEC+JMP+IMM32
 	} else // version Windows
 	version (linux) {
 		static assert(0, "x86-linux PRE_TEST code needed");
@@ -46,26 +46,25 @@ version (X86_64) {
 			0x48, 0x8B, 0x71, 0x18, 0xC3
 		];
 		enum POST_TEST_SIZE = POST_TEST.length;
-		enum POST_TEST_JMP = 5;	/// Jump patch offset, 0-based, aims at lowest byte
-		enum POST_TEST_JMP_SIZE = 9;	// DEC+JMP+IMM32
+		enum POST_TEST_JMP_LOC = 5;	/// Jump patch offset, 0-based, aims at lowest byte
+		enum POST_TEST_OFFSET = 9;	// DEC+JMP+IMM32
 	} else
 	version (linux) {
 		immutable ubyte []PRE_TEST = [
 			0x48, 0x89, 0x7F, 0x14, 0x48, 0x89, 0x77, 0x1C,
-			0x48, 0x89, 0xFE, 0x48, 0x31, 0xFF, 0x48, 0x8B,
-			0x7E, 0x10, 0x0F, 0x31, 0x89, 0x06, 0x89, 0x56,
-			0x04
+			0x48, 0x89, 0xFE, 0x8B, 0x7E, 0x10, 0x0F, 0x31,
+			0x89, 0x06, 0x89, 0x56, 0x04
 		];
 		enum PRE_TEST_SIZE = PRE_TEST.length;
 
 		immutable ubyte []POST_TEST = [
-			0x48, 0xFF, 0xCF, 0x0F, 0x85, 0xFB, 0x0F, 0x31,
-			0x89, 0x46, 0x08, 0x89, 0x56, 0x0C, 0x48, 0x89,
-			0xF7, 0x48, 0x8B, 0x77, 0x18, 0xC3
+			0xFF, 0xCF, 0x0F, 0x85, 0x00, 0x00, 0x00, 0x00,
+			0x0F, 0x31, 0x89, 0x46, 0x08, 0x89, 0x56, 0x0C,
+			0x48, 0x89, 0xF7, 0x48, 0x8B, 0x77, 0x18, 0xC3
 		];
 		enum POST_TEST_SIZE = POST_TEST.length;
-		enum POST_TEST_JMP = 5;	/// Jump patch offset, 0-based, aims at lowest byte
-		enum POST_TEST_JMP_SIZE = 9;	// DEC+JMP+IMM32
+		enum POST_TEST_JMP_LOC = 4;	/// Jump patch offset, 0-based, aims at lowest byte
+		enum POST_TEST_OFFSET = 8;	// DEC+JMP+IMM32
 	}
 }
 
@@ -88,24 +87,22 @@ struct __TEST_SETTINGS { align(1):
 	}
 	uint runs;	// [16]
 	version (X86) {
-		uint R0;	// [20]
-		uint R1;	// [24]
+		uint EDI;	// [20]
+		uint ESI;	// [24]
 	}
 	version (X86_64) {
-		ulong R0;	// [20]
-		ulong R1;	// [28]
+		ulong RDI;	// [20]
+		ulong RSI;	// [28]
 	}
 }
 
-debug {
-	static assert(__TEST_SETTINGS.t1.offsetof == 0);
-	static assert(__TEST_SETTINGS.t1_l.offsetof == 0);
-	static assert(__TEST_SETTINGS.t1_h.offsetof == 4);
-	static assert(__TEST_SETTINGS.t2.offsetof == 8);
-	static assert(__TEST_SETTINGS.t2_l.offsetof == 8);
-	static assert(__TEST_SETTINGS.t2_h.offsetof == 12);
-	static assert(__TEST_SETTINGS.runs.offsetof == 16);
-}
+static assert(__TEST_SETTINGS.t1.offsetof == 0);
+static assert(__TEST_SETTINGS.t1_l.offsetof == 0);
+static assert(__TEST_SETTINGS.t1_h.offsetof == 4);
+static assert(__TEST_SETTINGS.t2.offsetof == 8);
+static assert(__TEST_SETTINGS.t2_l.offsetof == 8);
+static assert(__TEST_SETTINGS.t2_h.offsetof == 12);
+static assert(__TEST_SETTINGS.runs.offsetof == 16);
 
 int l_start() {
 	if (l_check == 0) {
@@ -113,10 +110,10 @@ int l_start() {
 		return 1;
 	}
 
-	debug printf("file: %s\n", Settings.filepath);
+	printf("file: %s\n", Settings.filepath);
 
 	l_init;	// init ddcputester
-	debug printf("delta penalty: %d\n", Settings.delta);
+	printf("delta penalty: %d\n", Settings.delta);
 
 	switch (l_load(Settings.filepath)) {
 	case 0: break;
@@ -251,12 +248,11 @@ int l_load(const(char) *path) {
 	// post-test code + patch
 	memmove(buf, cast(ubyte*)POST_TEST, POST_TEST_SIZE);
 
-	int jmp = -(fl + POST_TEST_JMP_SIZE); // + DEC + JNE + OP
-	debug printf("[debug] jmp: ");
-	*cast(int*)(buf + POST_TEST_JMP) = jmp;
+	int jmp = -(fl + POST_TEST_OFFSET); // DEC + JNE + IMM32
+	*cast(int*)(buf + POST_TEST_JMP_LOC) = jmp;
 
 	debug {
-		printf("%d (%Xh)\n", jmp, jmp);
+		printf("[debug] jmp: %d (%Xh)\n", jmp, jmp);
 		ubyte *p = cast(ubyte*)mainpage;
 
 		uint m = PRE_TEST_SIZE;

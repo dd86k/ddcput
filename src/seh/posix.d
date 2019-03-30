@@ -1,7 +1,6 @@
 module seh.posix;
 
 import core.stdc.stdio : printf;
-import core.stdc.stdlib : exit;
 import os.setjmp;
 import ddcput;
 
@@ -18,6 +17,7 @@ private:
 
 nothrow @nogc @system
 void _except_handler(int s) {
-	printf("Got SIGSEGV (%d), exiting", s);
+	import core.stdc.stdlib : exit;
+	printf("SIGSEGV (%d), exiting\n", s);
 	exit(s);
 }
