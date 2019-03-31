@@ -31,6 +31,10 @@ vm8086 modes.
 
 ## Latency Tester
 
+The latency tester will perform an average by arithmetic mean, meaning it only
+takes two timestamps (RDTSC) and divides the different by the number of times
+it looped.
+
 Currently, the latency tester will run instructions depending on the compiled
 binary. For example, the amd64 build will only run amd64 code while the x86
 builds will run x86 code. A feature to run x86 code in amd64 is planned.
@@ -40,11 +44,14 @@ builds will run x86 code. A feature to run x86 code in amd64 is planned.
 - And the flow must reach past the end of your code.
   - The tool inserts its own pre-test and post-test code.
 
-### REGISTER USAGE
+### RESERVED REGISTERS
 
-(x86) EDI and ESI registers are reserved for internal use.
-
-(amd64) RDI and RSI registers are reserved for internal use.
+| Platform | Register | Use |
+|---|---|---|
+| x86 | EDI | Counter |
+| | ESI | Structure pointer |
+| amd64 | RDI | Couter |
+| | RSI | Structure pointer |
 
 # X86 PITFALLS
 
@@ -53,8 +60,8 @@ context of the source code and may generate improper code.
 
 ## OPCODE PREFIX
 
-In x86 ("long compability mode"), NASM might prefix a MOV instruction with an
-OPCODE PREFIX (66h), even if BITS 32 is specified (not effects in BITS 64).
+In x86 ("long compability mode"), NASM may prefix a MOV instruction with an
+OPCODE PREFIX (66h), even if BITS 32 is specified (no effects in BITS 64).
 
 The OPCODE prefix serves as inverting 16-bit and 32-bit instructions, useful
 for executing 32-bit instructions in 16-bit mode (real-address mode) to
@@ -78,8 +85,9 @@ case, it will attempt to write at address 0h and effectively segfault (#UD).
 
 # VIRTUALIZATION NOTES
 
-Please note that some emulators and hypervisors, such as Oracle VirtualBox may
-improperly emulate the RDTSC instruction.
+Please note that some emulators and hypervisors, such as Oracle VirtualBox, may
+improperly emulate the RDTSC instruction, since the RDTSC instruction is  used
+in the latency mode for its cycle count.
 
 # DISCLAIMER
 
@@ -88,7 +96,7 @@ UNSECURE. MAKE SURE THIS TOOL IS NOT AVALAIBLE WITHIN YOUR PATH FOR SECURITY
 REASONS. **NEVER** RUN CODE THAT YOU DO NOT TRUST (i.e. COMPILED BY ANOTHER
 PERSON, ONLINE EXAMPLES).
 
-LATENCY RESULTS ARE BASED ON THE NUMBER OF TIMES THEY RAN, THE HIGHER THE
-COUNT, THE HIGHER PRECISION. HOWEVER, THE LATENCY TESTS ARE STILL AVERAGE.
+LATENCY RESULTS ARE BASED ON THE NUMBER OF TIMES THEY RAN (AVERAGE BY
+ARITHMETIC MEAN), THE HIGHER THE COUNT, THE HIGHER PRECISION.
 
 See LICENSE for more information.
