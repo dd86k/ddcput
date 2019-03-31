@@ -16,11 +16,11 @@ module os.setjmp;
 extern (C):
 
 int setjmp(jmp_buf*);
-void longjmp(jmp_buf*, int);
-
-//alias jmp_buf[_JBLEN] _JBTYPE;
+void longjmp(jmp_buf*, int) @nogc nothrow;
 
 __gshared jmp_buf *jmpcpy; /// jmp_buf copy for seh
+
+//alias jmp_buf[_JBLEN] _JBTYPE;
 
 version (X86) {
 	version (Windows) {

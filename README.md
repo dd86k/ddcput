@@ -31,16 +31,17 @@ vm8086 modes.
 
 ## Latency Tester
 
-The latency tester will perform an average by arithmetic mean, meaning it only
-takes two timestamps (RDTSC) and divides the different by the number of times
-it looped.
+For the cycle count, the latency mode will perform an average by arithmetic
+mean, meaning it only takes two timestamps (RDTSC) and divides the different
+by the number of times it looped.
 
 Currently, the latency tester will run instructions depending on the compiled
 binary. For example, the amd64 build will only run amd64 code while the x86
 builds will run x86 code. A feature to run x86 code in amd64 is planned.
 
 - Binary code (file) _must_ be flat (i.e. -fbin on NASM);
-- It MUST NOT return (RET, LEAVE, etc.);
+- It MUST NOT return or jump beyond your code;
+- Binary must fit in a single page (4096 Bytes - size_t.sizeof);
 - And the flow must reach past the end of your code.
   - The tool inserts its own pre-test and post-test code.
 
