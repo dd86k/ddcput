@@ -5,20 +5,20 @@ ddcput is a micro-processor testing utility that can:
 
 ## OPERATING SYSTEM SUPPORT
 
-| Platform | Latency Tester | Fuzzer |
-|---|---|---|
-| Windows-x86 | ✔️ (5.1+) | 🔄 ongoing |
-| Windows-amd64 | ✔️ (6.0+) | 🔄 ongoing |
-| macOS-amd64 | Planned [1] | Planned [1] |
-| Linux-x86 | Planned | Planned |
-| Linux-amd64 | ✔️ | Planned |
-| FreeBSD-x86 | Planned | Planned |
-| FreeBSD-amd64 | Planned | Planned |
-| OpenBSD-x86 | Planned | Planned |
-| OpenBSD-amd64 | Planned | Planned |
-| efi-amd64 | Considering | Considering |
-| baremetal-x86 | Considering | Considering |
-| baremetal-amd64 | Considering | Considering |
+| Platform | Latency Tester (-L) | Fuzzer (-F) | TLB Tester (-T) |
+|---|---|---|---|
+| Windows-x86 | ✔️ (5.1+) | Planned | Planned |
+| Windows-amd64 | ✔️ (6.0+) | Planned | Planned |
+| macOS-amd64 [1] | Planned | Planned | Planned |
+| Linux-x86 | Planned | Planned | Planned |
+| Linux-amd64 | ✔️ | Planned | Planned |
+| FreeBSD-x86 | Planned | Planned | Planned |
+| FreeBSD-amd64 | Planned | Planned | Planned |
+| OpenBSD-x86 | Planned | Planned | Planned |
+| OpenBSD-amd64 | Planned | Planned | Planned |
+| efi-amd64 | Considering | Considering | Considering |
+| baremetal-x86 | Considering | Considering | Considering |
+| baremetal-amd64 | Considering | Considering | Considering |
 
 [1] Until I get a macOS VM or someone willing to implement the necessities
 
