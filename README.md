@@ -27,9 +27,9 @@ ddcput is a micro-processor testing utility that can:
 (x86/amd64) This tool is NOT supported in any 16-bit modes, such as real and
 vm8086 modes.
 
-# USAGE
+# MODES OF OPERATION
 
-## Latency Tester
+## LATENCY TESTER
 
 For the cycle count, the latency mode will perform an average by arithmetic
 mean, meaning it only takes two timestamps (RDTSC) and divides the different
@@ -51,7 +51,7 @@ builds will run x86 code. A feature to run x86 code in amd64 is planned.
 |---|---|---|
 | x86 | EDI | Counter |
 | | ESI | Structure pointer |
-| amd64 | RDI | Couter |
+| amd64 | RDI | Counter |
 | | RSI | Structure pointer |
 
 # X86 PITFALLS

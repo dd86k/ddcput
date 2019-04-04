@@ -33,7 +33,7 @@ alias _CONTEXT* PCONTEXT;
 alias _EXCEPTION_RECORD* PEXCEPTION_RECORD;
 
 extern (Windows) LPTOP_LEVEL_EXCEPTION_FILTER
-SetUnhandledExceptionFilter(LPTOP_LEVEL_EXCEPTION_FILTER);
+	SetUnhandledExceptionFilter(LPTOP_LEVEL_EXCEPTION_FILTER);
 
 extern (Windows)
 uint _except_handler(_EXCEPTION_POINTERS *e) {
@@ -126,12 +126,7 @@ version (X86) {
 		//
 		// Debug registers
 		//
-		DWORD Dr0;
-		DWORD Dr1;
-		DWORD Dr2;
-		DWORD Dr3;
-		DWORD Dr6;
-		DWORD Dr7;
+		DWORD Dr0, Dr1, Dr2, Dr3, Dr6, Dr7;
 		//
 		// Float
 		//
@@ -139,54 +134,41 @@ version (X86) {
 		//
 		// Segments
 		//
-		DWORD SegGs;
-		DWORD SegFs;
-		DWORD SegEs;
-		DWORD SegDs;
+		DWORD SegGs, SegFs, SegEs, SegDs;
 		//
 		// General registers
 		//
-		DWORD Edi;
-		DWORD Esi;
-		DWORD Ebx;
-		DWORD Edx;
-		DWORD Ecx;
-		DWORD Eax;
-		DWORD Ebp;
-		DWORD Eip;
-		DWORD SegCs; // segment
+		DWORD Edi, Esi, Ebx, Edx, Ecx, Eax, Ebp, Eip, SegCs;
 		//
 		// Flags
 		//
-		DWORD EFlags;
-		DWORD Esp; // generic
-		DWORD SegSs; // segment
-		BYTE[WOW64_MAXIMUM_SUPPORTED_EXTENSION] ExtendedRegisters;
+		DWORD EFlags, Esp, SegSs;
+		BYTE [WOW64_MAXIMUM_SUPPORTED_EXTENSION]ExtendedRegisters;
 	}
 } else
 version (X86_64) {
 	struct _XSAVE_FORMAT { align(16):
-		WORD   ControlWord;
-		WORD   StatusWord;
+		WORD  ControlWord;
+		WORD  StatusWord;
 		BYTE  TagWord;
 		BYTE  Reserved1;
-		WORD   ErrorOpcode;
+		WORD  ErrorOpcode;
 		DWORD ErrorOffset;
-		WORD   ErrorSelector;
-		WORD   Reserved2;
+		WORD  ErrorSelector;
+		WORD  Reserved2;
 		DWORD DataOffset;
-		WORD   DataSelector;
-		WORD   Reserved3;
+		WORD  DataSelector;
+		WORD  Reserved3;
 		DWORD MxCsr;
 		DWORD MxCsr_Mask;
-		M128A[8] FloatRegisters;
+		M128A [8]FloatRegisters;
 
 		version (Win64) {
-			M128A	[16]XmmRegisters;
-			BYTE	[96]Reserved4;
+			M128A [16]XmmRegisters;
+			BYTE  [96]Reserved4;
 		} else {
-			M128A	[8]XmmRegisters;
-			BYTE	[224]Reserved4;
+			M128A [8]XmmRegisters;
+			BYTE  [224]Reserved4;
 		}
 	}
 	/// Win64 _CONTEXT
@@ -194,15 +176,10 @@ version (X86_64) {
 		//
 		// Register parameter home addresses.
 		//
-		// N.B. These fields are for convience - they could be used to extend the
-		//      context record in the future.
+		// N.B. These fields are for convience - they could be used to
+		//      extend the context record in the future.
 		//
-		DWORD64 P1Home;
-		DWORD64 P2Home;
-		DWORD64 P3Home;
-		DWORD64 P4Home;
-		DWORD64 P5Home;
-		DWORD64 P6Home;
+		DWORD64 P1Home, P2Home, P3Home, P4Home, P5Home, P6Home;
 		//
 		// Control flags.
 		//
@@ -211,41 +188,17 @@ version (X86_64) {
 		//
 		// Segment Registers and processor flags.
 		//
-		WORD   SegCs;
-		WORD   SegDs;
-		WORD   SegEs;
-		WORD   SegFs;
-		WORD   SegGs;
-		WORD   SegSs;
+		WORD SegCs, SegDs, SegEs, SegFs, SegGs, SegSs;
 		DWORD EFlags;
 		//
 		// Debug registers
 		//
-		DWORD64 Dr0;
-		DWORD64 Dr1;
-		DWORD64 Dr2;
-		DWORD64 Dr3;
-		DWORD64 Dr6;
-		DWORD64 Dr7;
+		DWORD64 Dr0, Dr1, Dr2, Dr3, Dr6, Dr7;
 		//
 		// Integer registers.
 		//
-		DWORD64 Rax;
-		DWORD64 Rcx;
-		DWORD64 Rdx;
-		DWORD64 Rbx;
-		DWORD64 Rsp;
-		DWORD64 Rbp;
-		DWORD64 Rsi;
-		DWORD64 Rdi;
-		DWORD64 R8;
-		DWORD64 R9;
-		DWORD64 R10;
-		DWORD64 R11;
-		DWORD64 R12;
-		DWORD64 R13;
-		DWORD64 R14;
-		DWORD64 R15;
+		DWORD64 Rax, Rcx, Rdx, Rbx, Rsp, Rbp, Rsi, Rdi,
+			R8, R9, R10, R11, R12, R13, R14, R15;
 		//
 		// Program counter.
 		//
@@ -256,24 +209,11 @@ version (X86_64) {
 		union {
 			_XSAVE_FORMAT FltSave;
 			struct {
-				M128A	[2]Header;
-				M128A	[8]Legacy;
-				M128A Xmm0;
-				M128A Xmm1;
-				M128A Xmm2;
-				M128A Xmm3;
-				M128A Xmm4;
-				M128A Xmm5;
-				M128A Xmm6;
-				M128A Xmm7;
-				M128A Xmm8;
-				M128A Xmm9;
-				M128A Xmm10;
-				M128A Xmm11;
-				M128A Xmm12;
-				M128A Xmm13;
-				M128A Xmm14;
-				M128A Xmm15;
+				M128A [2]Header;
+				M128A [8]Legacy;
+				M128A Xmm0, Xmm1, Xmm2, Xmm3, Xmm4, Xmm5, Xmm6,
+					Xmm7, Xmm8, Xmm9, Xmm10, Xmm11, Xmm12,
+					Xmm13, Xmm14, Xmm15;
 			}
 		}
 		//
@@ -284,11 +224,8 @@ version (X86_64) {
 		//
 		// Special debug control registers.
 		//
-		DWORD64 DebugControl;
-		DWORD64 LastBranchToRip;
-		DWORD64 LastBranchFromRip;
-		DWORD64 LastExceptionToRip;
-		DWORD64 LastExceptionFromRip;
+		DWORD64 DebugControl, LastBranchToRip, LastBranchFromRip,
+			LastExceptionToRip, LastExceptionFromRip;
 	}
 }
 

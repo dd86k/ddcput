@@ -17,11 +17,11 @@ void phelp() {
 	"ddcput, processor testing tool\n"~
 	"Usage:\n"~
 	"\t(Latency) ddcput -L [FILE]\n"~
-	"\t(Fuzzer)  ddcput -F\n"~
+	//"\t(Fuzzer)  ddcput -F\n"~
 	"\tddcput {-v|-h|--version|--help}\n"~
 	"\n"~
 	"Latency\n"~
-	"\t-L FILE     File containing instructions to measure latency\n"~
+	"\t-L FILE     File containing machine instructions to measure latency\n"~
 	"\t-n          Number of times to run tests invidually\n"~
 	"\t-i          Run integrated tests\n" //TODO:
 	//"Fuzzer\n"
