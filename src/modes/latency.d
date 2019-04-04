@@ -147,9 +147,10 @@ int l_start() {
 		printf("[debug] t2: %u %u\n", s.t2_h, s.t2_l);
 	}
 
-	float r = (cast(float)s.t2_l - s.t1_l - Settings.delta) / Settings.runs;
-	printf("~%.1f cycles, ~%f ms (~%f ms total), %d runs\n",
-		r, ms / Settings.runs, ms, Settings.runs);
+	const uint c = s.t2_l - s.t1_l - Settings.delta;
+	const float r = cast(float)c / Settings.runs;
+	printf("~%.1f cycles (%u c total), ~%f ms (~%f ms total), %d runs\n",
+		r, c, ms / Settings.runs, ms, Settings.runs);
 
 	return 0;
 }
