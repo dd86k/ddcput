@@ -4,7 +4,7 @@ import core.stdc.string : strcmp;
 import ddcput;
 import os.io;
 import seh.seh;
-import modes.latency, modes.fuzzer;
+import modes.latency, modes.fuzzer, modes.registers;
 import misc : PLATFORM;
 
 enum APP_VERSION = "0.0.0"; /// Application version
@@ -88,6 +88,9 @@ int main(const int argc, const(char) **argv) {
 				Settings.cmode = MODE_LATENCY;
 				Settings.runs = DEFAULT_RUNS;
 				break;
+			case 'R':
+				Settings.cmode = MODE_REGISTERS;
+				break;
 			case 'r':
 				Settings.random = 1;
 				break;
@@ -115,15 +118,13 @@ int main(const int argc, const(char) **argv) {
 
 	switch (Settings.cmode) {
 	case MODE_LATENCY:
-		l_start;
-		break;
+		return l_start;
 	case MODE_FUZZER:
-		start_fuzzer;
-		break;
+		return start_fuzzer;
+	case MODE_REGISTERS:
+		return show_registers;
 	default: // MODE_NONE
 		puts("Please select an operation mode");
 		return 1;
 	}
-
-	return 0;
 }
