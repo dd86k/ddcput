@@ -4,6 +4,8 @@
  */
 module stopwatch;
 
+extern (C):
+
 version (Windows) {
 	import core.sys.windows.windows;
 } else
@@ -15,13 +17,12 @@ version (Posix) {
 		CLOCK_MONOTONIC_RAW,
 		CLOCK_REALTIME, CLOCK_REALTIME_COARSE,
 		CLOCK_THREAD_CPUTIME_ID, CLOCK_PROCESS_CPUTIME_ID;
-	enum CLOCK_TYPE = CLOCK_MONOTONIC;
-	enum TIME_NS = 1.0e12; // ns, used with clock_gettime
-	enum TIME_US = 1.0e9; // µs, used with clock_gettime
-	enum TIME_MS = 1.0e6; // ms, used with clock_gettime
+	private enum CLOCK_TYPE = CLOCK_MONOTONIC;
+	private enum TIME_NS = 1.0e12; // ns, used with clock_gettime
+	private enum TIME_US = 1.0e9; // µs, used with clock_gettime
+	private enum TIME_MS = 1.0e6; // ms, used with clock_gettime
+	private enum BILLION = TIME_US; //1_000_000_000;
 }
-
-extern (C):
 
 struct swatch_t {
 	version (Windows) {
@@ -77,15 +78,9 @@ float watch_ms(ref swatch_t s) {
 		return ((s.end - s.start) * 1000.0f) / s.freq;
 	else
 	version (Posix) {
-		float te = cast(float)s.end.tv_nsec;
-		float ts = cast(float)s.start.tv_nsec;
-		if (s.end.tv_sec) {
-			te += (s.end.tv_sec * TIME_NS);
-		}
-		if (s.start.tv_sec) {
-			ts += (s.start.tv_sec * TIME_NS);
-		}
-		return (te - ts) / s.freq.tv_nsec / TIME_MS;
+		return cast(float)
+			((BILLION * (s.end.tv_sec - s.start.tv_sec))
+			+ end.tv_nsec - start.tv_nsec) * 1_000_000f;
 		//return (s.end.tv_usec - s.start.tv_usec) * 1000.0f;
 	}
 }
@@ -95,7 +90,9 @@ float watch_us(ref swatch_t s) {
 		return (s.end - s.start) / s.freq;
 	else
 	version (Posix)
-		return (s.end.tv_nsec - s.start.tv_nsec) / TIME_MS;
+		return cast(float)
+			((BILLION * (s.end.tv_sec - s.start.tv_sec))
+			+ end.tv_nsec - start.tv_nsec) * 1_000f;
 		//return s.end.tv_usec - s.start.tv_usec;
 }
 
