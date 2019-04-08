@@ -13,5 +13,7 @@ version (X86) {
 } else {//version (ARM) {
 	//enum PLATFORM = "arm";	/// Compiled platform
 	static assert(0,
-		"ddcputester is currently only supported on x86");
+		"ddcput is currently only supported on x86 and x86-64");
 }
+
+template BIT(int n) { enum { BIT = 1 << n } }
