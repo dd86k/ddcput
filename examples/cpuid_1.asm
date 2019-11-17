@@ -2,5 +2,5 @@
 
 BITS 64	; Avoids nasm putting the OPCODE prefix (66h)
 
-mov eax, 0
+mov eax, 1
 cpuid
