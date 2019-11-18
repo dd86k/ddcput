@@ -80,7 +80,7 @@ float watch_ms(ref swatch_t s) {
 	version (Posix) {
 		return cast(float)
 			((BILLION * (s.end.tv_sec - s.start.tv_sec))
-			+ end.tv_nsec - start.tv_nsec) * 1_000_000f;
+			+ s.end.tv_nsec - s.start.tv_nsec) * 1_000_000f;
 		//return (s.end.tv_usec - s.start.tv_usec) * 1000.0f;
 	}
 }
@@ -92,7 +92,7 @@ float watch_us(ref swatch_t s) {
 	version (Posix)
 		return cast(float)
 			((BILLION * (s.end.tv_sec - s.start.tv_sec))
-			+ end.tv_nsec - start.tv_nsec) * 1_000f;
+			+ s.end.tv_nsec - s.start.tv_nsec) * 1_000f;
 		//return s.end.tv_usec - s.start.tv_usec;
 }
 
