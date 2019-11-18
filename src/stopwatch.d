@@ -1,6 +1,8 @@
 /**
- * Stopwatch module. Windows uses QueryPerformanceFrequency and
- * QueryPerformanceCounter and Posix systems use gettimeofday.
+ * Stopwatch module.
+ * 
+ * Windows uses QueryPerformanceFrequency and QueryPerformanceCounter.
+ * Posix platforms use clock_gettime (CLOCK_MONOTONIC).
  */
 module stopwatch;
 

@@ -11,7 +11,9 @@ version (Windows):
 extern (C):
 
 public void seh_init() {
-	SetUnhandledExceptionFilter(cast(void*)&_except_handler);
+	if (SetUnhandledExceptionFilter(cast(void*)&_except_handler) == null) {
+		puts("seh_init: SetUnhandledExceptionFilter failed");
+	}
 }
 
 private:

@@ -21,7 +21,7 @@ public void seh_init() {
 		sigaction(SIGTRAP, &sa, cast(sigaction_t*)0) == -1 ||
 		sigaction(SIGFPE, &sa, cast(sigaction_t*)0) == -1 ||
 		sigaction(SIGILL, &sa, cast(sigaction_t*)0) == -1) {
-		printf("WARNING: setting up SEH failed");
+		puts("seh_init: setting up SEH failed");
 	}
 }
 
