@@ -2,7 +2,7 @@ module modes.latency;
 
 import core.stdc.stdio :
 	puts, printf, FILE, fopen, fseek, ftell, fread, SEEK_END, SEEK_SET;
-import ddcput, os.io, mm, stopwatch, misc;
+import ddcput, os.io, mm, stopwatch, cpuid, misc;
 
 __gshared:
 extern (C):
@@ -108,7 +108,7 @@ static assert(__TEST_SETTINGS.runs.offsetof == 16);
 /// Run latency test
 /// Returns: Non-zero on error code
 int latency_run() {
-	if (latency_check == 0) {
+	if (cpuid_rdtsc == 0) {
 		puts("ABORT: RDTSC instruction not available");
 		return 1;
 	}
@@ -142,36 +142,18 @@ version (X86_64) {
 /// Run integrated latency tests
 /// Returns: Non-zero on error code
 int latency_run_integrated() {
-	if (latency_check == 0) {
+	if (cpuid_rdtsc == 0) {
 		puts("ABORT: RDTSC instruction not available");
 		return 1;
 	}
 	latency_init;	// init ddcputester
 
-	printf("RDRAND EDX: ");
-	latency_load(test_rdrand_edx.ptr, 3);
-	latency_test();
-	return 0;
-}
-
-/// Run pre-checks
-/// (x86) Check if RDTSC is present
-/// Returns: Non-zero if RDTSC is supported
-uint latency_check() {
-	/*version (GNU) asm {
-		"mov $1, %%eax\n"~
-		"cpuid\n"~
-		"and $16, %%edx\n"~
-		"mov %%edx, %%eax\n"~
-		"ret"
-	} else */
-	asm {	naked;
-		mov EAX, 1;
-		cpuid;
-		and EDX, 16;	// EDX[4] -- RDTSC
-		mov EAX, EDX;
-		ret;
+	if (cpuid_rdrand) {
+		printf("RDRAND EDX: ");
+		latency_load(test_rdrand_edx.ptr, 3);
+		latency_test();
 	}
+	return 0;
 }
 
 /// Initiates essential stuff and calculate delta penalty for measuring
