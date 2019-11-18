@@ -10,18 +10,13 @@ version (Windows) {
 	import core.sys.windows.windows;
 } else
 version (Posix) {
-	import core.sys.posix.sys.time : gettimeofday, timeval;
-	import core.sys.linux.time :
-		clock_getres, clock_gettime, clockid_t, timespec,
-		CLOCK_MONOTONIC, CLOCK_MONOTONIC_COARSE,
-		CLOCK_MONOTONIC_RAW,
-		CLOCK_REALTIME, CLOCK_REALTIME_COARSE,
-		CLOCK_THREAD_CPUTIME_ID, CLOCK_PROCESS_CPUTIME_ID;
+	import core.sys.posix.time :
+		CLOCK_MONOTONIC, timespec, clock_getres, clock_gettime;
 	private enum CLOCK_TYPE = CLOCK_MONOTONIC;
-	private enum TIME_NS = 1.0e12; // ns, used with clock_gettime
-	private enum TIME_US = 1.0e9; // µs, used with clock_gettime
-	private enum TIME_MS = 1.0e6; // ms, used with clock_gettime
-	private enum BILLION = TIME_US; //1_000_000_000;
+	private enum TIME_NS = 1.0e12;	// ns, used with clock_gettime
+	private enum TIME_US = 1.0e9;	// µs, used with clock_gettime
+	private enum TIME_MS = 1.0e6;	// ms, used with clock_gettime
+	private enum BILLION = TIME_US;
 }
 
 struct swatch_t {
@@ -29,7 +24,6 @@ struct swatch_t {
 		long start, end, freq;
 	} else
 	version (Posix) {
-		//timeval start, end;
 		timespec start, end, freq;
 	}
 	ubyte running;
@@ -48,28 +42,26 @@ void watch_init(ref swatch_t s) {
 }
 
 void watch_start(ref swatch_t s) {
-version (Windows) {
-	LARGE_INTEGER l = void;
-	QueryPerformanceCounter(&l);
-	s.start = l.QuadPart;
-} else
-version (Posix) {
-	//gettimeofday(&s.start, cast(void*)0);
-	clock_gettime(CLOCK_TYPE, &s.start);
-}
+	version (Windows) {
+		LARGE_INTEGER l = void;
+		QueryPerformanceCounter(&l);
+		s.start = l.QuadPart;
+	} else
+	version (Posix) {
+		clock_gettime(CLOCK_TYPE, &s.start);
+	}
 	s.running = 1;
 }
 
 void watch_stop(ref swatch_t s) {
-version (Windows) {
-	LARGE_INTEGER l = void;
-	QueryPerformanceCounter(&l);
-	s.end = l.QuadPart;
-} else
-version (Posix) {
-	//gettimeofday(&s.end, cast(void*)0);
-	clock_gettime(CLOCK_TYPE, &s.end);
-}
+	version (Windows) {
+		LARGE_INTEGER l = void;
+		QueryPerformanceCounter(&l);
+		s.end = l.QuadPart;
+	} else
+	version (Posix) {
+		clock_gettime(CLOCK_TYPE, &s.end);
+	}
 	s.running = 0;
 }
 
@@ -80,8 +72,7 @@ float watch_ms(ref swatch_t s) {
 	version (Posix) {
 		return cast(float)
 			((BILLION * (s.end.tv_sec - s.start.tv_sec))
-			+ s.end.tv_nsec - s.start.tv_nsec) * 1_000_000f;
-		//return (s.end.tv_usec - s.start.tv_usec) * 1000.0f;
+			+ s.end.tv_nsec - s.start.tv_nsec) / 1_000_000f;
 	}
 }
 
@@ -92,7 +83,6 @@ float watch_us(ref swatch_t s) {
 	version (Posix)
 		return cast(float)
 			((BILLION * (s.end.tv_sec - s.start.tv_sec))
-			+ s.end.tv_nsec - s.start.tv_nsec) * 1_000f;
-		//return s.end.tv_usec - s.start.tv_usec;
+			+ s.end.tv_nsec - s.start.tv_nsec) / 1_000f;
 }
 
