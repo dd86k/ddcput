@@ -42,53 +42,49 @@ uint _except_handler(_EXCEPTION_POINTERS *e) {
 		longjmp(jmpcpy, 1);
 	}
 
-version (X86) {
+	version (X86)
 	printf(
-		"\n***** EXCEPTION\n" ~
-		"Address: %X\n" ~
-		"Code: %X\n" ~
-		"EIP=%08X  EFLAG=%08X\n" ~
-		"EAX=%08X  EBX=%08X  ECX=%08X  EDX=%08X\n" ~
-		"EDI=%08X  ESI=%08X  EBP=%08X  ESP=%08X\n" ~
-		"CS=%04X  DS=%04X  ES=%04X  FS=%04X  GS=%04X  SS=%04X\n",
-		e.ExceptionRecord.ExceptionAddress,
-		e.ExceptionRecord.ExceptionCode,
-		e.ContextRecord.Eip, e.ContextRecord.EFlags,
-		e.ContextRecord.Eax, e.ContextRecord.Ebx,
-		e.ContextRecord.Ecx, e.ContextRecord.Edx,
-		e.ContextRecord.Edi, e.ContextRecord.Esi,
-		e.ContextRecord.Ebp, e.ContextRecord.Esp,
-		e.ContextRecord.SegCs, e.ContextRecord.SegDs, e.ContextRecord.SegEs,
-		e.ContextRecord.SegFs, e.ContextRecord.SegGs, e.ContextRecord.SegSs
+	"\n"~
+	"*************\n" ~
+	"* EXCEPTION *\n" ~
+	"*************\n" ~
+	"Code: %08X  Address: %08X\n" ~
+	"EIP=%08X  EFLAG=%08X\n" ~
+	"EAX=%08X  EBX=%08X  ECX=%08X  EDX=%08X\n" ~
+	"EDI=%08X  ESI=%08X  EBP=%08X  ESP=%08X\n" ~
+	"CS=%04X  DS=%04X  ES=%04X  FS=%04X  GS=%04X  SS=%04X\n",
+	e.ExceptionRecord.ExceptionCode, e.ExceptionRecord.ExceptionAddress,
+	e.ContextRecord.Eip, e.ContextRecord.EFlags,
+	e.ContextRecord.Eax, e.ContextRecord.Ebx,
+	e.ContextRecord.Ecx, e.ContextRecord.Edx,
+	e.ContextRecord.Edi, e.ContextRecord.Esi,
+	e.ContextRecord.Ebp, e.ContextRecord.Esp,
+	e.ContextRecord.SegCs, e.ContextRecord.SegDs, e.ContextRecord.SegEs,
+	e.ContextRecord.SegFs, e.ContextRecord.SegGs, e.ContextRecord.SegSs
 	);
-} else
-version (X86_64) {
+	else
+	version (X86_64)
 	printf(
-		"\n***** EXCEPTION\n" ~
-		"Address: %llX\n" ~
-		"Code: %X\n" ~
-		"RIP=%016llX  EFLAG=%08X\n" ~
-		"RAX=%016llX  RBX=%016llX  RCX=%016llX  RDX=%016llX\n" ~
-		"RDI=%016llX  RSI=%016llX  RBP=%016llX  RSP=%016llX\n" ~
-		" R8=%016llX   R9=%016llX  R10=%016llX  R11=%016llX\n" ~
-		"R12=%016llX  R13=%016llX  R14=%016llX  R15=%016llX\n" ~
-		"CS=%04X  DS=%04X  ES=%04X  FS=%04X  GS=%04X  SS=%04X\n",
-		e.ExceptionRecord.ExceptionAddress,
-		e.ExceptionRecord.ExceptionCode,
-		e.ContextRecord.Rip, e.ContextRecord.EFlags,
-		e.ContextRecord.Rax, e.ContextRecord.Rbx,
-		e.ContextRecord.Rcx, e.ContextRecord.Rdx,
-		e.ContextRecord.Rdi, e.ContextRecord.Rsi,
-		e.ContextRecord.Rbp, e.ContextRecord.Rsp,
-		e.ContextRecord.R8,  e.ContextRecord.R9,
-		e.ContextRecord.R10, e.ContextRecord.R11,
-		e.ContextRecord.R12, e.ContextRecord.R13,
-		e.ContextRecord.R14, e.ContextRecord.R15,
-		e.ContextRecord.Rbp, e.ContextRecord.Rsp,
-		e.ContextRecord.SegCs, e.ContextRecord.SegDs, e.ContextRecord.SegEs,
-		e.ContextRecord.SegFs, e.ContextRecord.SegGs, e.ContextRecord.SegSs
+	"\n"~
+	"*************\n" ~
+	"* EXCEPTION *\n" ~
+	"*************\n" ~
+	"Code: %08X  Address: %llX\n" ~
+	"RIP=%016llX  EFLAG=%08X\n" ~
+	"RAX=%016llX  RBX=%016llX  RCX=%016llX  RDX=%016llX\n" ~
+	"RDI=%016llX  RSI=%016llX  RBP=%016llX  RSP=%016llX\n" ~
+	" R8=%016llX   R9=%016llX  R10=%016llX  R11=%016llX\n" ~
+	"R12=%016llX  R13=%016llX  R14=%016llX  R15=%016llX\n" ~
+	"CS=%04X  DS=%04X  ES=%04X  FS=%04X  GS=%04X  SS=%04X\n",
+	e.ExceptionRecord.ExceptionCode, e.ExceptionRecord.ExceptionAddress,
+	e.ContextRecord.Rip, e.ContextRecord.EFlags,
+	e.ContextRecord.Rax, e.ContextRecord.Rbx, e.ContextRecord.Rcx, e.ContextRecord.Rdx,
+	e.ContextRecord.Rdi, e.ContextRecord.Rsi, e.ContextRecord.Rbp, e.ContextRecord.Rsp,
+	e.ContextRecord.R8,  e.ContextRecord.R9,  e.ContextRecord.R10, e.ContextRecord.R11,
+	e.ContextRecord.R12, e.ContextRecord.R13, e.ContextRecord.R14, e.ContextRecord.R15,
+	e.ContextRecord.SegCs, e.ContextRecord.SegDs, e.ContextRecord.SegEs,
+	e.ContextRecord.SegFs, e.ContextRecord.SegGs, e.ContextRecord.SegSs
 	);
-}
 
 	return EXCEPTION_EXECUTE_HANDLER;
 }
