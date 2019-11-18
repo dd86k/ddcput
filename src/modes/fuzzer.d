@@ -11,7 +11,7 @@ import misc;
 
 extern (C):
 
-int start_fuzzer() {
+int fuzzer_run() {
 	import core.stdc.stdio : printf, puts;
 	import core.stdc.string : memset;
 
@@ -45,7 +45,7 @@ int start_fuzzer() {
 
 		const uint size = rnextb & 0xF; // 0-15
 
-		fgenerate(mainpage, size);
+		fuzzer_generate(mainpage, size);
 
 		while (mmp[mmpi]) {
 			printf("%02X ", mmp[mmpi]);
@@ -71,7 +71,7 @@ int start_fuzzer() {
  * Returns: Nothing
  * Notes: Windows' RAND_MAX goes up to 0xFFFF
  */
-void fgenerate(page_t *buffer, int size) {
+void fuzzer_generate(page_t *buffer, int size) {
 	ubyte* up = cast(ubyte*)buffer;
 
 	uint i;
@@ -91,7 +91,7 @@ unittest {
 
 	ubyte [512]b;
 
-	fgenerate(cast(page_t*)b, 15);
+	fuzzer_generate(cast(page_t*)b, 15);
 
 	int i = 0;
 	uint *bp = cast(uint*)b;
@@ -102,7 +102,7 @@ unittest {
 
 	writeln("-- fgenerate 16");
 
-	fgenerate(cast(page_t*)b, 16);
+	fuzzer_generate(cast(page_t*)b, 16);
 
 	i = 0;
 	while (bp[i]) {

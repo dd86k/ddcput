@@ -16,9 +16,9 @@ void phelp() {
 	puts(
 	"ddcput, processor testing tool\n"~
 	"Usage:\n"~
+	"\tddcput {-v|-h|--version|--help}\n"~
 	"\t(Latency) ddcput -L [FILE]\n"~
 	//"\t(Fuzzer)  ddcput -F\n"~
-	"\tddcput {-v|-h|--version|--help}\n"~
 	"\n"~
 	"Latency\n"~
 	"\t-L FILE     File containing machine instructions to measure latency\n"~
@@ -40,6 +40,35 @@ void pversion() {
 	);
 }
 
+void plicense() {
+	puts(
+`Copyright (c) 2018-2019 dd86k
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+of the Software, and to permit persons to whom the Software is furnished to do
+so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.`
+	);
+}
+
+/**
+ * Check if path exists and is file.
+ * Params: path = File path
+ * Returns: Non-zero on error; otherwise zero
+ */
 int pcheck(const(char) *path) {
 	if (os_pexist(path) == 0) {
 		puts("File not found");
@@ -52,58 +81,62 @@ int pcheck(const(char) *path) {
 	return 0;
 }
 
-int main(const int argc, const(char) **argv) {
+int main(const(int) argc, const(char) **argv) {
 	if (argc <= 1) {
 		phelp; return 0;
 	}
 
-	uint ai; /// argument index
+	size_t argi; /// argument index
 	const(char) *a = void; /// temporary arg pointer
-	while (++ai < argc) {
-		if (argv[ai][1] == '-') { // Long arguments
-			a = argv[ai] + 2;
+	while (++argi < argc) {
+		if (argv[argi][1] == '-') { // Long arguments
+			a = argv[argi] + 2;
 			if (strcmp(a, "help") == 0) {
 				phelp; return 0;
 			}
 			if (strcmp(a, "version") == 0) {
 				pversion; return 0;
 			}
+			if (strcmp(a, "license") == 0) {
+				plicense; return 0;
+			}
 			printf("Unknown parameter: %s\n", a);
 			return 1;
-		} else if (argv[ai][0] == '-') { // Short arguments
-			a = argv[ai];
+		} else if (argv[argi][0] == '-') { // Short arguments
+			a = argv[argi];
 			while (*++a != 0) switch (*a) {
 			case 'F':
-				Settings.cmode = MODE_FUZZER;
+				Settings.opmode = MODE_FUZZER;
 				Settings.runs = DEFAULT_RUNS;
 				break;
 			case 'L':
-				if (ai + 1 >= argc) {
+				if (argi + 1 >= argc) {
 					puts("File argument missing for -L");
 					return 2;
 				}
-				const(char) *fp = argv[ai + 1];
-				if (pcheck(fp)) return 2;
-				Settings.filepath = fp;
-				Settings.cmode = MODE_LATENCY;
+				Settings.filepath = argv[argi + 1];
+				Settings.opmode = MODE_LATENCY;
 				Settings.runs = DEFAULT_RUNS;
 				break;
 			case 'R':
-				Settings.cmode = MODE_REGISTERS;
+				Settings.opmode = MODE_REGISTERS;
 				break;
 			case 'r':
 				Settings.random = 1;
 				break;
 			case 'n':
-				if (ai + 1 >= argc) {
+				if (argi + 1 >= argc) {
 					puts("File argument missing for -r");
 					return 2;
 				}
-				Settings.runs = atoi(argv[ai + 1]);
+				Settings.runs = atoi(argv[argi + 1]);
 				if (Settings.runs == 0) {
 					puts("Run times must be higher than 0 (-n)");
 					return 3;
 				}
+				break;
+			case 'i':
+				Settings.integrated = true;
 				break;
 			case 'h', '?': phelp; return 0;
 			case 'v': pversion; return 0;
@@ -116,13 +149,19 @@ int main(const int argc, const(char) **argv) {
 
 	seh_init;
 
-	switch (Settings.cmode) {
+	switch (Settings.opmode) {
 	case MODE_LATENCY:
-		return l_start;
+		if (Settings.integrated) {
+			return latency_run_integrated;
+		} else {
+			if (pcheck(Settings.filepath))
+				return 2;
+			return latency_run;
+		}
 	case MODE_FUZZER:
-		return start_fuzzer;
+		return fuzzer_run;
 	case MODE_REGISTERS:
-		return show_registers;
+		return registers_run;
 	default: // MODE_NONE
 		puts("Please select an operation mode");
 		return 1;

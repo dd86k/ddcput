@@ -4,6 +4,7 @@ import core.stdc.stdio :
 	puts, printf, FILE, fopen, fseek, ftell, fread, SEEK_END, SEEK_SET;
 import ddcput, os.io, mm, stopwatch, misc;
 
+__gshared:
 extern (C):
 
 /*
@@ -11,7 +12,6 @@ extern (C):
  * messing with that.
  */
 
-// NOTE: *.length does not work
 version (X86) {
 	version (Windows) {
 		immutable ubyte []PRE_TEST = [ // pre-x86-windows.asm
@@ -90,6 +90,7 @@ struct __TEST_SETTINGS { align(1):
 		uint EDI;	// [20]
 		uint ESI;	// [24]
 	}
+	else
 	version (X86_64) {
 		ulong RDI;	// [20]
 		ulong RSI;	// [28]
@@ -104,18 +105,19 @@ static assert(__TEST_SETTINGS.t2_l.offsetof == 8);
 static assert(__TEST_SETTINGS.t2_h.offsetof == 12);
 static assert(__TEST_SETTINGS.runs.offsetof == 16);
 
-int l_start() {
-	if (l_check == 0) {
+/// Run latency test
+/// Returns: Non-zero on error code
+int latency_run() {
+	if (latency_check == 0) {
 		puts("ABORT: RDTSC instruction not available");
 		return 1;
 	}
 
-	printf("file: %s\n", Settings.filepath);
-
-	l_init;	// init ddcputester
+	latency_init;	// init ddcputester
 	debug printf("delta penalty: %d\n", Settings.delta);
 
-	switch (l_load(Settings.filepath)) {
+	printf("file: %s\n", Settings.filepath);
+	switch (latency_load_file(Settings.filepath)) {
 	case 0: break;
 	case 1:
 		puts("ABORT: File could not be opened");
@@ -125,39 +127,37 @@ int l_start() {
 		return 0xfe;
 	}
 
-	__TEST_SETTINGS s = void;
-	s.runs = Settings.runs;
-
-	swatch_t sw = void;
-	watch_init(sw);
-
-	extern (C) void function(__TEST_SETTINGS*) // forces __cdecl (Windows)
-		__test = cast(void function(__TEST_SETTINGS*))mainpage;
-
-	watch_start(sw);
-	asm { nop; }
-	__test(&s);
-	asm { nop; }
-	watch_stop(sw);
-
-	const float ms = watch_ms(sw);
-
-	debug {
-		printf("[debug] t1: %u %u\n", s.t1_h, s.t1_l);
-		printf("[debug] t2: %u %u\n", s.t2_h, s.t2_l);
-	}
-
-	const uint c = s.t2_l - s.t1_l - Settings.delta;
-	const float r = cast(float)c / Settings.runs;
-	printf("~%.1f cycles (%u c total), ~%f ms (~%f ms total), %d runs\n",
-		r, c, ms / Settings.runs, ms, Settings.runs);
+	latency_test();
 
 	return 0;
 }
 
+version (X86) {
+	immutable ubyte [3]test_rdrand_edx = [ 0x0F, 0xC7, 0xF2 ];
+} else
+version (X86_64) {
+	immutable ubyte [3]test_rdrand_edx = [ 0x0F, 0xC7, 0xF2 ];
+}
+
+/// Run integrated latency tests
+/// Returns: Non-zero on error code
+int latency_run_integrated() {
+	if (latency_check == 0) {
+		puts("ABORT: RDTSC instruction not available");
+		return 1;
+	}
+	latency_init;	// init ddcputester
+
+	printf("RDRAND EDX: ");
+	latency_load(test_rdrand_edx.ptr, 3);
+	latency_test();
+	return 0;
+}
+
+/// Run pre-checks
 /// (x86) Check if RDTSC is present
 /// Returns: Non-zero if RDTSC is supported
-uint l_check() {
+uint latency_check() {
 	/*version (GNU) asm {
 		"mov $1, %%eax\n"~
 		"cpuid\n"~
@@ -165,7 +165,7 @@ uint l_check() {
 		"mov %%edx, %%eax\n"~
 		"ret"
 	} else */
-	asm { naked;
+	asm {	naked;
 		mov EAX, 1;
 		cpuid;
 		and EDX, 16;	// EDX[4] -- RDTSC
@@ -175,7 +175,7 @@ uint l_check() {
 }
 
 /// Initiates essential stuff and calculate delta penalty for measuring
-void l_init() {
+void latency_init() {
 	__TEST_SETTINGS s;
 	s.runs = DEFAULT_RUNS;
 	version (X86) asm {
@@ -213,6 +213,7 @@ _TEST:
 		puts("Could not initialize mainpage");
 	}
 	mainpage.code[0] = 0;	// test write
+	printf("Running %u times\n", Settings.runs);
 }
 
 /**
@@ -224,16 +225,7 @@ _TEST:
  *   1 on file could not be open
  *   2 on file could not be loaded into memory
  */
-int l_load(const(char) *path) {
-	import core.stdc.string : memmove;
-	import os.io : os_pexist;
-
-	ubyte *buf = cast(ubyte*)mainpage;
-
-	// pre-test code
-	memmove(buf, cast(ubyte*)PRE_TEST, PRE_TEST_SIZE);
-	buf += PRE_TEST_SIZE;
-
+int latency_load_file(const(char) *path) {
 	// user code
 	FILE *f = fopen(path, "rb");
 	if (cast(uint)f == 0) return 1;
@@ -245,14 +237,31 @@ int l_load(const(char) *path) {
 	debug printf("[debug] size: %u\n", fl);
 	fseek(f, 0, SEEK_SET);
 
-	fread(buf, fl, 1, f);
-	buf += fl;
+	ubyte [4096]buf = void;
+	fread(buf.ptr, fl, 1, f);
 
-	// post-test code + patch
-	memmove(buf, cast(ubyte*)POST_TEST, POST_TEST_SIZE);
+	latency_load(buf.ptr, fl);
 
-	int jmp = -(fl + POST_TEST_OFFSET); // DEC + JNE + IMM32
-	*cast(int*)(buf + POST_TEST_JMP_LOC) = jmp;
+	return 0;
+}
+
+int latency_load(const(ubyte) *data, int len) {
+	import core.stdc.string : memmove;
+
+	ubyte *buf = cast(ubyte*)mainpage;
+
+	// pre-test code
+	memmove(buf, cast(ubyte*)PRE_TEST, PRE_TEST_SIZE);
+	size_t offset = PRE_TEST_SIZE;
+
+	// test data
+	memmove(buf + offset, data, len);
+	offset += len;
+
+	// post-test code + jmp patch
+	memmove(buf + offset, cast(ubyte*)POST_TEST, POST_TEST_SIZE);
+	int jmp = -(len + POST_TEST_OFFSET); // DEC + JNE + IMM32
+	*cast(int*)(buf + offset + POST_TEST_JMP_LOC) = jmp;
 
 	debug {
 		printf("[debug] jmp: %d (%Xh)\n", jmp, jmp);
@@ -263,7 +272,7 @@ int l_load(const(char) *path) {
 		do printf("%02X ", *p++); while (--m);
 		putchar('\n');
 
-		m = fl;
+		m = len;
 		printf("[debug] TEST[%2d]: ", m);
 		do printf("%02X ", *p++); while (--m);
 		putchar('\n');
@@ -275,6 +284,34 @@ int l_load(const(char) *path) {
 	}
 
 	mm_protect(mainpage);
+	return 0;
+}
 
+int latency_test() {
+	swatch_t sw = void;
+	watch_init(sw);
+	__TEST_SETTINGS s = void;
+	s.runs = Settings.runs;
+
+	extern (C) void function(__TEST_SETTINGS*)
+		__test = cast(void function(__TEST_SETTINGS*))mainpage;
+
+	watch_start(sw);
+	asm { nop; }
+	__test(&s);
+	asm { nop; }
+	watch_stop(sw);
+
+	const float ms = watch_ms(sw);
+	const uint c = s.t2_l - s.t1_l - Settings.delta;
+	float r = cast(float)c / Settings.runs;
+
+	debug {
+		printf("[debug] t1: %u %u\n", s.t1_h, s.t1_l);
+		printf("[debug] t2: %u %u\n", s.t2_h, s.t2_l);
+	}
+
+	printf("~%.1f cycles (%u total), ~%f ms (~%f ms total)\n",
+		r, c, ms / Settings.runs, ms);
 	return 0;
 }

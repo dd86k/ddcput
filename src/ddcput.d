@@ -17,7 +17,7 @@ enum DEFAULT_RUNS = 50_000;
 
 struct settings_s {
 	/// Current operation mode, defaults to MODE_NONE
-	ubyte cmode;
+	ubyte opmode;
 	/// (Latency) Number of times to loop code
 	/// (Fuzzer) Number of times to generate and execute instructions
 	uint runs;
@@ -25,6 +25,8 @@ struct settings_s {
 	const(char) *filepath;
 	/// (Latency: x86, AMD64) Moving results from RDTSC penalty
 	uint delta;
+	/// (Latency) Run integrated tests instead of file.
+	ubyte integrated;
 	/// (Fuzzer) Genereate instructions randomly instead of tunneling
 	ubyte random;
 	/// (Internal) If non-zero, skip halting program (bypass SEH).

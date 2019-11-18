@@ -34,6 +34,16 @@ struct xmm_t { align(1):
 static assert(xmm_t.sizeof == 16);
 
 version (X86) {
+	struct regs_t {
+		uint eax, ebx, ecx, edx, ebp, esp, edi, esi;
+		uint eflag, eip;
+		ushort cs, ds, es, fs, gs, ss;
+		uint cr0, cr2, cr3, cr4;
+		uint dr0, dr1, dr2, dr3, dr6, dr7;
+		uint tr3, tr4, tr5, tr6, tr7;
+		ubyte s_hasr; /// Has Access to Special Registers (e.g. CR0)
+		ubyte s_fxsr; /// FXSAVE has been used
+	}
 	struct fsave_t { align(1): // 32-bit protected mode format
 		ushort control, pad0, status, pad1, tag, pad2;
 		uint fipo; /// FPU Instruction Pointer Offset (FIP)
@@ -67,62 +77,58 @@ version (X86) {
 	static assert(fxsave_t.sizeof == 512); // 32-bit
 } else
 version (X86_64) {
+	struct regs_t {
+		
+	}
+	struct fsave_t { align(1):
 	
+	}
+	struct fxsave_t { align(1):
+	}
 }
 
-int show_registers() {
+int registers_run() {
 	version (X86) {
-		struct regs {
-			uint eax, ebx, ecx, edx, ebp, esp, edi, esi;
-			uint eflag, eip;
-			ushort cs, ds, es, fs, gs, ss;
-			uint cr0, cr2, cr3, cr4;
-			uint dr0, dr1, dr2, dr3, dr6, dr7;
-			uint tr3, tr4, tr5, tr6, tr7;
-			ubyte s_hasr; /// Has Access to Special Registers (e.g. CR0)
-			ubyte s_fxsr; /// FXSAVE has been used
-		}
-		regs r = void; // stack
+		regs_t r = void; // stack
 		fsave_t f = void;
-		//TODO: 16-byte alignement for FXSAVE
 		fxsave_t fx = void;
 		asm {
-			mov [r + regs.eax.offsetof], EAX;
-			mov [r + regs.ebx.offsetof], EBX;
-			mov [r + regs.ecx.offsetof], ECX;
-			mov [r + regs.edx.offsetof], EDX;
-			mov [r + regs.ebp.offsetof], EBP;
-			mov [r + regs.esp.offsetof], ESP;
-			mov [r + regs.edi.offsetof], EDI;
-			mov [r + regs.esi.offsetof], ESI;
-			mov [r + regs.cs.offsetof], CS;
-			mov [r + regs.ds.offsetof], DS;
-			mov [r + regs.es.offsetof], ES;
-			mov [r + regs.fs.offsetof], FS;
-			mov [r + regs.gs.offsetof], GS;
-			mov [r + regs.ss.offsetof], SS;
+			mov [r + regs_t.eax.offsetof], EAX;
+			mov [r + regs_t.ebx.offsetof], EBX;
+			mov [r + regs_t.ecx.offsetof], ECX;
+			mov [r + regs_t.edx.offsetof], EDX;
+			mov [r + regs_t.ebp.offsetof], EBP;
+			mov [r + regs_t.esp.offsetof], ESP;
+			mov [r + regs_t.edi.offsetof], EDI;
+			mov [r + regs_t.esi.offsetof], ESI;
+			mov [r + regs_t.cs.offsetof], CS;
+			mov [r + regs_t.ds.offsetof], DS;
+			mov [r + regs_t.es.offsetof], ES;
+			mov [r + regs_t.fs.offsetof], FS;
+			mov [r + regs_t.gs.offsetof], GS;
+			mov [r + regs_t.ss.offsetof], SS;
 			pushfd;
-			pop [r + regs.eflag.offsetof]; // Save EFLAG
-			mov byte ptr [r + regs.s_hasr.offsetof], 0; // so far, no access
+			pop [r + regs_t.eflag.offsetof]; // Save EFLAG
+			mov byte ptr [r + regs_t.s_hasr.offsetof], 0; // so far, no access
 			mov AX, CS; // Hopefully loaded CS[1:0] with CPL
 			test AX, 3; // Check CPL
 			jnz NO_SPEC_REGS; // Jump if CPL != 0
-			mov byte ptr [r + regs.s_hasr.offsetof], 1; // has access!
-			mov EAX, CR0; mov [r + regs.cr0.offsetof], EAX;
-			mov EAX, CR2; mov [r + regs.cr2.offsetof], EAX;
-			mov EAX, CR3; mov [r + regs.cr3.offsetof], EAX;
-			mov EAX, CR4; mov [r + regs.cr4.offsetof], EAX;
-			mov EAX, DR0; mov [r + regs.dr0.offsetof], EAX;
-			mov EAX, DR1; mov [r + regs.dr1.offsetof], EAX;
-			mov EAX, DR2; mov [r + regs.dr2.offsetof], EAX;
-			mov EAX, DR3; mov [r + regs.dr3.offsetof], EAX;
-			mov EAX, DR6; mov [r + regs.dr6.offsetof], EAX;
-			mov EAX, DR7; mov [r + regs.dr7.offsetof], EAX;
-			mov EAX, TR3; mov [r + regs.tr3.offsetof], EAX;
-			mov EAX, TR4; mov [r + regs.tr4.offsetof], EAX;
-			mov EAX, TR5; mov [r + regs.tr5.offsetof], EAX;
-			mov EAX, TR6; mov [r + regs.tr6.offsetof], EAX;
-			mov EAX, TR7; mov [r + regs.tr7.offsetof], EAX;
+			mov byte ptr [r + regs_t.s_hasr.offsetof], 1; // has access!
+			mov EAX, CR0; mov [r + regs_t.cr0.offsetof], EAX;
+			mov EAX, CR2; mov [r + regs_t.cr2.offsetof], EAX;
+			mov EAX, CR3; mov [r + regs_t.cr3.offsetof], EAX;
+			mov EAX, CR4; mov [r + regs_t.cr4.offsetof], EAX;
+			mov EAX, DR0; mov [r + regs_t.dr0.offsetof], EAX;
+			mov EAX, DR1; mov [r + regs_t.dr1.offsetof], EAX;
+			mov EAX, DR2; mov [r + regs_t.dr2.offsetof], EAX;
+			mov EAX, DR3; mov [r + regs_t.dr3.offsetof], EAX;
+			mov EAX, DR6; mov [r + regs_t.dr6.offsetof], EAX;
+			mov EAX, DR7; mov [r + regs_t.dr7.offsetof], EAX;
+			mov EAX, TR3; mov [r + regs_t.tr3.offsetof], EAX;
+			mov EAX, TR4; mov [r + regs_t.tr4.offsetof], EAX;
+			mov EAX, TR5; mov [r + regs_t.tr5.offsetof], EAX;
+			mov EAX, TR6; mov [r + regs_t.tr6.offsetof], EAX;
+			mov EAX, TR7; mov [r + regs_t.tr7.offsetof], EAX;
 		NO_SPEC_REGS:
 		//
 		// Check if FXSAVE is supported (Intel/AMD)
@@ -208,7 +214,7 @@ int show_registers() {
 		}
 	} else
 	version (X86_64) {
-		//lea rax, [rip]
+		
 	}
 	
 	return 0;
