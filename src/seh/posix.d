@@ -1,6 +1,6 @@
 module seh.posix;
 
-import core.stdc.stdio : printf;
+import core.stdc.stdio : printf, puts;
 import core.stdc.stdlib : exit;
 import os.setjmp;
 import ddcput;

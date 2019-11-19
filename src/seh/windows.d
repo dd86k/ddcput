@@ -3,7 +3,7 @@
  */
 module seh.windows;
 
-import core.stdc.stdio : printf;
+import core.stdc.stdio : printf, puts;
 import os.setjmp;
 import ddcput;
 
