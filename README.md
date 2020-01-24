@@ -54,6 +54,11 @@ builds will run x86 code. A feature to run x86 code in amd64 is planned.
 | amd64 | RDI | Counter |
 | | RSI | Structure pointer |
 
+## REGISTER
+
+This is a "for fun" mode. Can be used to get a general idea of available
+registers on the platform.
+
 # X86 PITFALLS
 
 x86 is a complex ISA, it might happen that assemblers do not know the full
@@ -87,7 +92,7 @@ case, it will attempt to write at address 0h and effectively segfault (#UD).
 # VIRTUALIZATION NOTES
 
 Please note that some emulators and hypervisors, such as Oracle VirtualBox, may
-improperly emulate the RDTSC instruction, since the RDTSC instruction is  used
+improperly emulate the RDTSC instruction, since the RDTSC instruction is used
 in the latency mode for its cycle count.
 
 # DISCLAIMER
